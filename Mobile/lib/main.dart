@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/login_page.dart';
+import 'package:mobile/battle_page.dart';
 import 'package:mobile/gorbie.dart';
 
 void main() {
@@ -21,11 +21,12 @@ class _AppState extends State<App> {
   }
 
   late final Gorbie gorbie = Gorbie(setRoot: (Widget root) => _setRoot(root));
-  late Widget _root = LoginPage(gorbie: gorbie);
+  late Widget _root = BattlePage(gorbie: gorbie);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true),
       home: Scaffold(body: _root),
     );

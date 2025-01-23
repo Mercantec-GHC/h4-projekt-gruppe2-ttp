@@ -4,14 +4,14 @@ import 'package:mobile/logo.dart';
 import 'package:mobile/gorbie.dart';
 
 class RegisterPage extends StatelessWidget {
-  const RegisterPage({super.key, required this.gorbie});
+  const RegisterPage({super.key, required gorbie}) : _gorbie = gorbie;
 
-  final Gorbie gorbie;
+  final Gorbie _gorbie;
 
   void _registerPressed() {}
 
   void _loginPressed(BuildContext context) {
-    gorbie.setRoot(LoginPage(gorbie: gorbie));
+    _gorbie.setRoot(LoginPage(gorbie: _gorbie));
   }
 
   @override
