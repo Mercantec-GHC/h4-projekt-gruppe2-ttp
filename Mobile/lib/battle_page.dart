@@ -202,7 +202,8 @@ class BattlePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return Scaffold(
+      body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Consumer<Battle>(
           builder: (context, battle, child) => Column(
@@ -244,6 +245,8 @@ class BattlePage extends StatelessWidget {
               ],
             ],
           ),
-        ));
+        ),
+      ),
+    );
   }
 }

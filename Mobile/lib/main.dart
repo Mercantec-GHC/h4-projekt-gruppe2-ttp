@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/battle.dart';
 import 'package:mobile/battle_page.dart';
 import 'package:mobile/gorbie.dart';
-import 'package:provider/provider.dart';
+import 'package:mobile/home_page.dart';
 
 void main() {
   runApp(App());
@@ -31,10 +30,7 @@ class _AppState extends State<App> {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true),
       home: Scaffold(
-        body: ChangeNotifierProvider(
-          create: (_) => Battle(),
-          child: BattlePage(),
-        ),
+        body: HomePage(),
       ),
     );
   }
