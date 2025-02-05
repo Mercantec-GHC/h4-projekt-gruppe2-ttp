@@ -1,0 +1,22 @@
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: test
+        run: echo 'testing'
+
+  deploy:
+    needs: [test]
+    runs-on:  ubuntu-latest
+    steps:
+      - name: deploy
+        run: echo 'deploying'
+
+
+# Needs to run some tests to see if the api returns the proper results.
+# If said test passes it will the proceed to push the api code to our vm and deploy it.
