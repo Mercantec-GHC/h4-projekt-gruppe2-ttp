@@ -1,0 +1,10 @@
+{
+    "tasks": {
+        "dev": "deno run --watch main.ts"
+    },
+    "imports": {
+        "@felix/bcrypt": "jsr:@felix/bcrypt@^1.0.5",
+        "@result/result": "jsr:@result/result@^1.1.0",
+        "@std/assert": "jsr:@std/assert@1"
+    }
+}
