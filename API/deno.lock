@@ -5,7 +5,9 @@
     "jsr:@felix/bcrypt@^1.0.5": "1.0.5",
     "jsr:@oak/commons@1": "1.0.0",
     "jsr:@oak/oak@*": "17.1.4",
-    "jsr:@result/result@^1.1.0": "1.1.0",
+    "jsr:@oak/oak@^17.1.4": "17.1.4",
+    "jsr:@result/result@*": "1.1.0",
+    "jsr:@result/result@1.1.0": "1.1.0",
     "jsr:@std/assert@0.221": "0.221.0",
     "jsr:@std/assert@1": "1.0.11",
     "jsr:@std/bytes@1": "1.0.5",
@@ -135,7 +137,8 @@
   "workspace": {
     "dependencies": [
       "jsr:@felix/bcrypt@^1.0.5",
-      "jsr:@result/result@^1.1.0",
+      "jsr:@oak/oak@^17.1.4",
+      "jsr:@result/result@1.1.0",
       "jsr:@std/assert@1"
     ]
   }

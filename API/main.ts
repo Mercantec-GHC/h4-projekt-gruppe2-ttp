@@ -3,6 +3,9 @@ import { Db, Token, token } from "./db.ts";
 import { err, ok, Result } from "jsr:@result/result";
 import { HashedPassword } from "./hashed_password.ts";
 
+const db;/* <--- DATABASE CONNECTION */
+
+
 interface RegisterRequest {
     username: string;
     password: string;
@@ -56,13 +59,13 @@ async function login(db: Db, req: LoginRequest): Promise<Result<Token, string>> 
     return ok(token(existingUser.id));
 }
 
-async function getUserStats(db: Db, req: string): Promise<Result<void, stats>> {
-
-    if (/*check if the username exists*/) {
+async function getUserStats(db: Db, req: string): Promise<Result<stats, string>> {
+    
+    // if (/*check if the username exists*/) {
         
-    }
-    const res = db.getUserStats(req);
-    return ok();
+    // }
+    const res = await db.getUserStats(req);
+    return ok(res);
 }
 
 const port = 8000;
@@ -76,8 +79,7 @@ router.post("/test", async (ctx) => {
 router.post("/createUser", async (ctx) => {
     const req: RegisterRequest = await ctx.request.body.json();
 
-    const db; /* <--- DATABASE CONNECTION */
-
+    
     // Check if body has text
     if (!req.username || !req.password) {
         ctx.response.body = { ok: false, message: "Please fill out all fields" };
@@ -97,8 +99,7 @@ router.post("/createUser", async (ctx) => {
 router.post("/login", async (ctx)  => {
     const req: LoginRequest = await ctx.request.body.json();
 
-    const db; /* <--- DATABASE CONNECTION */
-
+  
     // Check if body has text
     if (!req.username || !req.password) {
         ctx.response.body = { ok: false, message: "Please fill out all fields" };
@@ -116,12 +117,12 @@ router.post("/login", async (ctx)  => {
 
 });
 
-router.post("/getstats/:user", async (ctx) => {
-    if (!ctx.request) {
+router.post("/getstats/", async (ctx) => {
+    if (ctx.request == null) {
         ctx.response.body = { ok: false, message: "Missing content" };
     } else {
-        const res = (await getUserStats(db, req)).match(
-            (_ok: void) => ({ ok: true, message: "Success" }),
+        const res = (await getUserStats(db, ctx.request.body.text.toString())).match(
+            (_ok: stats) => ({ ok: true, message: "Success" }),
             (err: string) => ({ ok: false, message: err })
         );
     }

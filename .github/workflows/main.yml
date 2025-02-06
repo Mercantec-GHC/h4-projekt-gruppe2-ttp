@@ -8,14 +8,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: test
-        run: echo 'testing'
+        run: |
+          echo 'testing'
 
   deploy:
     needs: [test]
     runs-on:  ubuntu-latest
     steps:
       - name: deploy
-        run: echo 'deploying'
+        run: |
+           echo 'deploying'
 
 
 # Needs to run some tests to see if the api returns the proper results.
