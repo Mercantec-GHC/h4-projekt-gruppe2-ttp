@@ -17,7 +17,7 @@ export class MariaDb implements Db {
             password: "admin",
         });
 
-        await db.execute("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT, password TEXT)");
+        await db.execute("CREATE TABLE IF NOT EXISTS users (id NVARCHAR(255) PRIMARY KEY, username TEXT, password TEXT)");
 
         return new MariaDb(db);
     }
