@@ -11,7 +11,7 @@ export class MariaDb implements Db {
 
     public static async connect(): Promise<MariaDb> {
         const db = await new Client().connect({
-            hostname: "localhost",
+            hostname: "127.0.0.1",
             username: "root",
             db: "TriviaCrusader",
             password: "",
