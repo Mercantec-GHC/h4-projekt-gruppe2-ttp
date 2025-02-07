@@ -33,7 +33,7 @@ async function createUser(db: Db, req: RegisterRequest): Promise<Result<void, st
     } */
 
     // Creates user in the database with the user inputs and hashing the password
-    db.createUser(uuid(), req.username, await HashedPassword.hash(req.password));
+    db.createUser(req.username, await HashedPassword.hash(req.password));
     return ok();
 }
 

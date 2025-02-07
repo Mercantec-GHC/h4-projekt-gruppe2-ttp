@@ -40,7 +40,7 @@ export function token(user: User["id"]): Token {
 }
 
 export interface Db {
-    createUser(uuid: string, username: string, password: HashedPassword): Promise<null>;
+    createUser(username: string, password: HashedPassword): Promise<null>;
     userFromName(username: string): Promise<User | null>;
     getUserStats(username: string): Promise<Stats | null>;
 }
