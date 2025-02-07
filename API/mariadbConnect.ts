@@ -9,7 +9,7 @@ export class MariaDb implements Db {
         this.connection = client;
     }
 
-    public static async connect(path: string): Promise<MariaDb> {
+    public static async connect(): Promise<MariaDb> {
         const db = await new Client().connect({
             hostname: "localhost",
             username: "root",
@@ -24,7 +24,7 @@ export class MariaDb implements Db {
 
     public async createUser(id: string, username: string, password: HashedPassword): Promise<null> {
         id = uuid();
-        await this.connection.execute("INSERT INTO users(id, username, password) VALUES(?, ?, ?)");
+        await this.connection.execute("INSERT INTO users(id, username, password) VALUES(?, ?, ?)", [id, username, password.value]);
         return null;
     }
 

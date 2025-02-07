@@ -39,7 +39,7 @@ async function createUser(db: Db, req: RegisterRequest): Promise<Result<void, st
 
 async function login(db: Db, req: LoginRequest): Promise<Result<Token, string>> {
     // Retrieves username from input to check if username exists in the database
-    const existingUser = db.userFromName(req.username);
+    const existingUser = await db.userFromName(req.username);
 
     // Checks if the user exists
     if (existingUser === null) {
@@ -83,7 +83,7 @@ router.post("/createUser", async (ctx) => {
     }
 
     // Creates user with createUser()
-    const res = (await createUser(new MariaDb(), req)).match(
+    const res = (await createUser(await MariaDb.connect(), req)).match(
         (_ok: void) => ({ ok: true, message: "Success" }),
         (err: string) => ({ ok: false, message: err })
     );
@@ -102,7 +102,7 @@ router.post("/login", async (ctx) => {
     }
 
     // Logs user in with token
-    (await login(new MariaDb(), req)).match(
+    (await login(await MariaDb.connect(), req)).match(
         (token) => {
             ctx.response.body = { ok: true, message: "Success", token: token.value };
         },
