@@ -24,7 +24,7 @@ export class MariaDb implements Db {
 
     public async createUser(id: string, username: string, password: HashedPassword): Promise<null> {
         id = uuid();
-        await this.connection.query("INSERT INTO users(id, username, password) VALUES(?, ?, ?)");
+        await this.connection.execute("INSERT INTO users(id, username, password) VALUES(?, ?, ?)");
         return null;
     }
 
