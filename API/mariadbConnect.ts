@@ -1,11 +1,15 @@
-import { Db, User, uuid, stats } from "./db.ts";
+import { Db, User, uuid, Stats } from "./db.ts";
 import { HashedPassword } from "./hashed_password.ts";
 import { Client } from "https://deno.land/x/mysql@v2.12.1/mod.ts";
 
-export class mariaDb implements Db {
-    private connection: any;
+export class MariaDb implements Db {
+    private connection: Client;
 
-    public static async connect(path: string): Promise<mariaDb> {
+    private constructor(client: Client) {
+        this.connection = client;
+    }
+
+    public static async connect(path: string): Promise<MariaDb> {
         const db = await new Client().connect({
             hostname: "localhost",
             username: "root",
@@ -15,28 +19,36 @@ export class mariaDb implements Db {
 
         await db.execute("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT, password TEXT)");
 
-        return new mariaDb();
+        return new MariaDb(db);
     }
 
-    public createUser(id: string, username: string, password: HashedPassword): null {
+    public async createUser(id: string, username: string, password: HashedPassword): Promise<null> {
         id = uuid();
-        this.connection.prepare("INSERT INTO users(id, username, password) VALUES(?, ?, ?, ?)").run(id, username, password.value);
+        await this.connection.execute("INSERT INTO users(id, username, password) VALUES(?, ?, ?)", [id, username, password.value]);
         return null;
     }
 
-    public userFromName(username: string): User | null {
-        const user = this.connection.prepare("SELECT * FROM users WHERE username = ?").get(username);
+    public async userFromName(username: string): Promise<User | null> {
+        const result = await this.connection.execute("SELECT * FROM users WHERE username = ?", [username]);
+        if (!result.rows || result.rows.length === 0) {
+            return null;
+        }
+        const user = result.rows[0] ?? null;
         if (!user) {
             return null;
         }
         return user as User;
     }
 
-    public getUserStats(username: string): stats {
-        const result = this.connection.prepare("SELECT * FROM users WHERE username = ?").get(username);
-        if (!result) {
-            throw new Error(`No stats found for user: ${username}`);
+    public async getUserStats(username: string): Promise<Stats | null> {
+        const result = await this.connection.execute("SELECT * FROM users WHERE username = ?", [username]);
+        if (!result.rows || result.rows.length === 0) {
+            return null;
         }
-        return result as stats;
+        const user = result.rows[0] ?? null;
+        if (!user) {
+            return null;
+        }
+        return user as Stats;
     }
 }

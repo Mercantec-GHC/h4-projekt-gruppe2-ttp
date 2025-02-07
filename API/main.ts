@@ -1,6 +1,6 @@
 import * as oak from "jsr:@oak/oak";
 import { Db, Token, token, uuid } from "./db.ts";
-import { mariaDb } from "./mariadbConnect.ts";
+import { MariaDb } from "./mariadbConnect.ts";
 import { err, ok, Result } from "jsr:@result/result";
 import { HashedPassword } from "./hashed_password.ts";
 
@@ -83,7 +83,7 @@ router.post("/createUser", async (ctx) => {
     }
 
     // Creates user with createUser()
-    const res = (await createUser(new mariaDb(), req)).match(
+    const res = (await createUser(new MariaDb(), req)).match(
         (_ok: void) => ({ ok: true, message: "Success" }),
         (err: string) => ({ ok: false, message: err })
     );
@@ -102,7 +102,7 @@ router.post("/login", async (ctx) => {
     }
 
     // Logs user in with token
-    (await login(new mariaDb(), req)).match(
+    (await login(new MariaDb(), req)).match(
         (token) => {
             ctx.response.body = { ok: true, message: "Success", token: token.value };
         },

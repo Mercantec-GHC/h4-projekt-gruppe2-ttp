@@ -4,10 +4,10 @@ export type User = {
     id: string;
     name: string;
     password: string;
-    stats: stats;
+    stats: Stats;
 };
 
-export type stats = {
+export type Stats = {
     winratio: number;
     wins: number;
     correctness: number;
@@ -40,7 +40,7 @@ export function token(user: User["id"]): Token {
 }
 
 export interface Db {
-    createUser(uuid: string, username: string, password: HashedPassword): null;
-    /*getUserStats(username: string): Stats;*/
-    userFromName(username: string): User | null;
+    createUser(uuid: string, username: string, password: HashedPassword): Promise<null>;
+    userFromName(username: string): Promise<User | null>;
+    getUserStats(username: string): Promise<Stats | null>;
 }
