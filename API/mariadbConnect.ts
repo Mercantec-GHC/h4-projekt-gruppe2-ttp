@@ -12,9 +12,9 @@ export class MariaDb implements Db {
     public static async connect(): Promise<MariaDb> {
         const db = await new Client().connect({
             hostname: "127.0.0.1",
-            username: "root",
+            username: "admin",
             db: "TriviaCrusader",
-            password: "",
+            password: "admin",
         });
 
         await db.execute("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT, password TEXT)");
