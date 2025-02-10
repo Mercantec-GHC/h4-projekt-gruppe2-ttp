@@ -1,18 +1,20 @@
 ## API Spec
 
-
 ## Endpoints
-### POST /CreateUser
+
+### POST /createUser
 
 **Request**
+
 ```ts
 username: string,
 passowrd: string,
 ```
 
 **Response**
+
 ```ts
-Messages: "Success" | "User alreay exists" | "Please fill out all fields"
+Messages: "Success" | "User alreay exists" | "Please fill out all fields";
 ```
 
 ### POST /login
@@ -35,39 +37,45 @@ Messages: "Success" + JWT Cookie | "Please fill out all required fields." | "No 
 Should it only be the user themselves that can delete their account?
 
 **Request**
+
 ```ts
 username: string,
 token: Token,
 ```
 
 **Response**
+
 ```ts
-Messages: "Success" | "Couldn't find a user with that name" | "fejl 500"
+Messages: "Success" | "Couldn't find a user with that name" | "fejl 500";
 ```
 
-### GET /userStats 
+### GET /userStats
+
 **Request**
+
 ```ts
 username: string;
-
 ```
 
 **Response**
+
 ```ts
 
 ```
 
 ### GET /Question
+
 **Request**
+
 ```ts
 difficulty: int,
-category: 
+category:
 ```
 
 **Response**
+
 ```ts
 
 ```
+
 ### saveGamendgametodatabaseefterslut
-
-
