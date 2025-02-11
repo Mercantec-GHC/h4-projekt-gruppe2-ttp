@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class Client {
-  final String apiUrl = "http://10.135.51.101:3306";
+  final String apiUrl = "http://10.135.51.101:8000";
 
   Future<ClientResult<Null>> register(String username, String password) async {
     final body = json.encode({"username": username, "password": password});

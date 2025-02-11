@@ -1,4 +1,5 @@
 import * as oak from "jsr:@oak/oak";
+import { oakCors } from "https://deno.land/x/cors/mod.ts";
 import { Db, Token, token } from "./db.ts";
 import { MariaDb } from "./mariadbConnect.ts";
 import { err, ok, Result } from "jsr:@result/result";
@@ -131,6 +132,7 @@ router.post("/getstats/", async (ctx) => {
 router.post("/savestats/:user", async (ctx) => {});
 
 const app = new oak.Application();
+app.use(oakCors());
 app.use(router.routes());
 app.use(router.allowedMethods());
 app.use(async (ctx, next) => {
