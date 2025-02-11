@@ -4,78 +4,86 @@ import 'package:mobile/register_page.dart';
 import 'package:mobile/gorbie.dart';
 
 class LoginPage extends StatelessWidget {
-  const LoginPage({super.key, required gorbie}) : _gorbie = gorbie;
-
-  final Gorbie _gorbie;
+  const LoginPage({super.key});
 
   void _loginPressed() {}
 
-  void _registerPressed(BuildContext context) {
-    _gorbie.setRoot(RegisterPage(gorbie: _gorbie));
-  }
+  void _registerPressed() {}
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          const Logo(),
-          const SizedBox(height: 16),
-          const SizedBox(width: 150, child: Divider()),
-          const SizedBox(height: 16),
-          const SizedBox(
-            width: 200,
-            child: TextField(
-              decoration: InputDecoration(
-                label: Text("Brugernavn"),
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          const SizedBox(
-            width: 200,
-            child: TextField(
-              obscureText: true,
-              decoration: InputDecoration(
-                label: Text("Adgangskode"),
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          FilledButton(
-            onPressed: _loginPressed,
-            child: const Padding(
-              padding: EdgeInsets.all(8),
-              child: Text(
-                "Log ind",
-                style: TextStyle(fontSize: 20),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextButton(
-            onPressed: () => _registerPressed(context),
-            child: RichText(
-              text: TextSpan(
-                children: <TextSpan>[
-                  const TextSpan(text: 'Har du ikke en konto? Klik '),
-                  TextSpan(
-                    text: 'her',
-                    style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                        decoration: TextDecoration.underline),
+    return Scaffold(
+      body: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Flexible(
+            child:
+                Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              const Logo(),
+              const SizedBox(height: 16),
+              const SizedBox(width: 150, child: Divider()),
+              const SizedBox(height: 16),
+              const SizedBox(
+                width: 200,
+                child: TextField(
+                  decoration: InputDecoration(
+                    label: Text("Brugernavn"),
+                    border: OutlineInputBorder(),
                   ),
-                  const TextSpan(
-                      text: ' for at registrere en ny konto i stedet.'),
-                ],
+                ),
               ),
-            ),
-          ),
-        ])
-      ],
+              const SizedBox(height: 16),
+              const SizedBox(
+                width: 200,
+                child: TextField(
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    label: Text("Adgangskode"),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: _loginPressed,
+                child: const Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Text(
+                    "Log ind",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return RegisterPage();
+                    },
+                  ),
+                ),
+                child: RichText(
+                  text: TextSpan(
+                    children: <TextSpan>[
+                      const TextSpan(text: 'Har du ikke en konto? Klik '),
+                      TextSpan(
+                        text: 'her',
+                        style: TextStyle(
+                            color: Theme.of(context).primaryColor,
+                            decoration: TextDecoration.underline),
+                      ),
+                      const TextSpan(
+                          text: ' for at registrere en ny konto i stedet.'),
+                    ],
+                  ),
+                ),
+              ),
+            ]),
+          )
+        ],
+      ),
     );
   }
 }

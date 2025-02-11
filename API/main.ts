@@ -65,7 +65,7 @@ async function getUserStats(db: Db, req: string): Promise<Result<stats, string>>
 } 
 */
 
-const port = 8000;
+const port = 3306;
 
 const router = new oak.Router();
 
