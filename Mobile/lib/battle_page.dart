@@ -1,3 +1,8 @@
+import 'dart:async';
+
+//tempt
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:mobile/battle.dart';
 import 'package:provider/provider.dart';
@@ -198,7 +203,32 @@ class _TroopList extends StatelessWidget {
 }
 
 class BattlePage extends StatelessWidget {
-  const BattlePage({super.key});
+  BattlePage({super.key});
+  
+  Timer? _periodicTimer;
+
+  void dispose() {
+  _periodicTimer?.cancel();
+}
+
+void _startTimer(Battle battle) {
+  const oneSecond = Duration(seconds: 1);
+  _periodicTimer = Timer.periodic(oneSecond, (timer) {
+    if (battle.enemy.health == 0 || battle.player.health == 0) {
+      dispose();
+      if(battle.enemy.health == 0) {
+        //Player won
+      }
+      else {
+        //Player lost
+      }
+    
+    }
+    else {
+    battle.step();
+    }
+  });
+}
 
   @override
   Widget build(BuildContext context) {
@@ -212,9 +242,9 @@ class BattlePage extends StatelessWidget {
             children: [
               ElevatedButton(
                   onPressed: () {
-                    battle.step();
+                    _startTimer(battle);
                   },
-                  child: Text("Step")),
+                  child: Text("Start Game")),
               ElevatedButton(
                   onPressed: () {
                     battle.addPlayerTroop();
@@ -250,3 +280,5 @@ class BattlePage extends StatelessWidget {
     );
   }
 }
+
+
