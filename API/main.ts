@@ -1,5 +1,5 @@
 import * as oak from "jsr:@oak/oak";
-import { Db, Token, token, uuid } from "./db.ts";
+import { Db, Token, token } from "./db.ts";
 import { MariaDb } from "./mariadbConnect.ts";
 import { err, ok, Result } from "jsr:@result/result";
 import { HashedPassword } from "./hashed_password.ts";
@@ -25,12 +25,12 @@ interface Stats {
 // Creates user
 async function createUser(db: Db, req: RegisterRequest): Promise<Result<void, string>> {
     // Retrieves username from input to check if username exists in the database
-    /* const existingUser = db.userFromName(req.username);
+    const existingUser = db.userFromName(req.username);
 
     // Checks if the user exists
     if (existingUser !== null) {
         return err("User alreay exists");
-    } */
+    }
 
     // Creates user in the database with the user inputs and hashing the password
     db.createUser(req.username, await HashedPassword.hash(req.password));
