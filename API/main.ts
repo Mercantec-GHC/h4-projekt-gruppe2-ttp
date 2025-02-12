@@ -54,16 +54,17 @@ async function login(db: Db, req: LoginRequest): Promise<Result<Token, string>> 
 
     return ok(token(existingUser.id));
 }
-
-/*
-async function getUserStats(db: Db, req: string): Promise<Result<stats, string>> {
-    if (/*check if the username exists) {
-
+async function getUserStats(db: Db, req: string): Promise<Result<Stats, string>> {
+    // Retrieves stats from db
+    const userStats = await db.getUserStats(req)
+    if (userStats != null) {
+        return ok(userStats);
      }
-    const res = await db.getUserStats(req);
-    return ok(res);
 } 
-*/
+
+async function saveUserStats(db: Db, req: string): Promise<Result<void | string>> {
+    
+}
 
 const port = 8000;
 
@@ -112,23 +113,43 @@ router.post("/login", async (ctx) => {
     );
 });
 
-/*
-router.post("/getstats/", async (ctx) => {
-    if (ctx.request == null) {
+router.post("/getstats", async (ctx) => {
+    const req = await ctx.request.body.json();
+    // checks if request has content
+    if (req == null) {
         ctx.response.body = { ok: false, message: "Missing content" };
-    } else {
-        const res = (await getUserStats(db, ctx.request.body.text.toString())).match(
-            (_ok: Stats) => ({ ok: true, message: "Success" }),
-            (err: string) => ({ ok: false, message: err })
-        );
-    }
-    if (ctx.request.url) {
-        ctx.response.body = { ok: true, message: "User stats" };
-    }
-});
-*/
+        return;
+    } 
 
-router.post("/savestats/:user", async (ctx) => {});
+    const res = (await getUserStats(await MariaDb.connect(), req)).match(
+        (_ok: Stats) => {
+            ctx.response.body = { ok: true, message: "Success", stats: res};
+        },
+        (err: string) => {
+            ctx.response.body = { ok: false, message: err };
+        }
+    );
+
+});
+
+
+router.post("/savestats/:user", async (ctx) => {
+    const req = await ctx.request.body.json()
+
+    if (req == null) {
+        ctx.response.body = { ok: true, message: "Unknown request"};
+        return;
+    }
+    
+    const res = (await saveUserStats(await MariaDb.connect(), req)).match(
+        (_ok: string) => {
+            ctx.response.body = { ok: true, message: "success"}
+        },
+        (err: string) => {
+            ctx.response.body = {ok: false, message: err}
+        }
+    )
+});
 
 const app = new oak.Application();
 app.use(router.routes());

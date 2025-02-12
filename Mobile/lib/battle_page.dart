@@ -1,7 +1,5 @@
 import 'dart:async';
 
-//tempt
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:mobile/battle.dart';

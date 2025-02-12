@@ -43,4 +43,5 @@ export interface Db {
     createUser(username: string, password: HashedPassword): Promise<null>;
     userFromName(username: string): Promise<User | null>;
     getUserStats(username: string): Promise<Stats | null>;
+    saveUserStats(username: string, stats: Stats): Promise<null>
 }

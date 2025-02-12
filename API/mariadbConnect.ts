@@ -18,7 +18,7 @@ export class MariaDb implements Db {
         });
 
         await db.execute("CREATE TABLE IF NOT EXISTS users (id NVARCHAR(255) PRIMARY KEY, username TEXT, password TEXT)");
-
+        await db.execute("CREATE TABLE IF NOT EXISTS user_stats(username TEXT, win_ratio FLOAT, wins INT, correctness FLOAT, games_played INT, lost INT")
         return new MariaDb(db);
     }
 
@@ -42,7 +42,7 @@ export class MariaDb implements Db {
     }
 
     public async getUserStats(username: string): Promise<Stats | null> {
-        const result = await this.connection.execute("SELECT * FROM users WHERE username = ?", [username]);
+        const result = await this.connection.execute("SELECT * FROM user_stats WHERE username = ?", [username]);
         if (!result.rows || result.rows.length === 0) {
             return null;
         }
@@ -51,5 +51,19 @@ export class MariaDb implements Db {
             return null;
         }
         return user as Stats;
+    }
+
+    public async saveUserStats(username: string, stats: Stats): Promise<null> {
+        const current = await this.getUserStats(username);
+        if ( current == null ) {
+        const result = await this.connection.execute("INSERT INTO user_stats(win_ratio, wins, correctness, games_played, lost, username) VALUES(?,?,?,?,?,?)", [stats.winratio, stats.wins, stats.correctness, stats.gamesplayed, stats.lost, username])
+            
+            return null;
+        }
+        stats.winratio = current?.wins / current?.lost; 
+        stats.correctness = current.correctness * stats.correctness
+
+        const result = await this.connection.execute("UPDATE user_stats SET win_ratio = ?, wins = ?, correctness = ?, games_played = ?, lost = ? WHERE username = ?", [stats.winratio, stats.wins, stats.correctness, stats.gamesplayed, stats.lost, username])
+        return null;
     }
 }
