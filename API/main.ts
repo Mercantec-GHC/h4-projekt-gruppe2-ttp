@@ -26,7 +26,8 @@ interface Stats {
 // Creates user
 async function createUser(db: Db, req: RegisterRequest): Promise<Result<void, string>> {
     // Retrieves username from input to check if username exists in the database
-    const existingUser = db.userFromName(req.username);
+
+    const existingUser = await db.userFromName(req.username);
 
     // Checks if the user exists
     if (existingUser !== null) {
