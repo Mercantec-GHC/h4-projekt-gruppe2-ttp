@@ -6,11 +6,11 @@ import 'package:provider/provider.dart';
 class RegisterRequest extends ChangeNotifier {
   Response status = Unset();
 
-  void register(String username, String password) async {
+  void register(String username, String password, BuildContext context) async {
     status = Loading();
     notifyListeners();
 
-    var result = await Client().register(username, password);
+    var result = await Client().register(username, password, context);
 
     status = switch (result) {
       SuccessResult() => Success(),
@@ -51,11 +51,15 @@ class RegisterPage extends StatelessWidget {
         builder: (BuildContext context, Widget? child) {
           var registerRequest = context.watch<RegisterRequest>();
           var statusText = "";
+          var isLoading = false;
           switch (registerRequest.status) {
             case Unset():
               statusText = "";
             case Loading():
-              statusText = "Loading";
+              isLoading = true;
+              if (isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
             case Success():
               statusText = "Success";
             case Error(message: final message):
@@ -96,8 +100,8 @@ class RegisterPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       FilledButton(
-                        onPressed: () => RegisterRequest()
-                            .register(username.text, password.text),
+                        onPressed: () => registerRequest.register(
+                            username.text, password.text, context),
                         child: const Padding(
                           padding: EdgeInsets.all(8),
                           child: Text(
@@ -128,7 +132,11 @@ class RegisterPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(statusText),
+                      Text(
+                        statusText,
+                        style: TextStyle(
+                            fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
                     ]),
               )
             ],
