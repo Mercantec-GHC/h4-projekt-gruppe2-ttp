@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/home_page.dart';
+import 'package:mobile/login_page.dart';
 
 void main() {
   runApp(App());
@@ -14,7 +14,7 @@ class App extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true),
       home: Scaffold(
-        body: HomeNavigation(),
+        body: LoginPage(),
       ),
     );
   }
