@@ -218,11 +218,11 @@ void _startTimer(Battle battle, context) {
       dispose();
       if(battle.enemy.health == 0) {
         //Player win
-        Navigator.push(context, MaterialPageRoute(builder: (context) => Win(victory: true)));
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => Win(victory: true)));
       }
       else {
         //Player lost
-         Navigator.push(context, MaterialPageRoute(builder: (context) => Win(victory: false)));
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => Win(victory: false)));
       }
     }
     else {

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/home_page.dart';
+
 
 class Win extends StatelessWidget {
-  const Win({super.key, required this.victory});
+  const Win({super.key, required this.victory,});
 
   final bool victory;
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(body:
+    GestureDetector( onTap: () => Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => HomeNavigation() )), child: 
     Column(
       children: [
         Container(
@@ -15,7 +18,6 @@ class Win extends StatelessWidget {
           height: MediaQuery.of(context).size.height,
           child: Container(
             decoration: BoxDecoration(
-              
               color: victory == true ? Color(0xFF00FF00) : Color(0xFFB71C1C), 
               borderRadius: BorderRadius.circular(10),
             ),
@@ -31,6 +33,8 @@ class Win extends StatelessWidget {
           ),
         ),
       ],
+    )
+
     )
     
     );
