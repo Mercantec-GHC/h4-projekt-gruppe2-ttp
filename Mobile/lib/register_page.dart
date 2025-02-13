@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/login_page.dart';
 import 'package:mobile/logo.dart';
 import 'package:mobile/api_frontend/client.dart';
-import 'package:mobile/home_page.dart';
 import 'package:provider/provider.dart';
 
 class RegisterRequest extends ChangeNotifier {
@@ -37,8 +37,6 @@ final class Error extends Response {
 class RegisterPage extends StatelessWidget {
   RegisterPage({super.key});
 
-  void _registerPressed() {}
-
   final username = TextEditingController();
   final password = TextEditingController();
 
@@ -62,14 +60,15 @@ class RegisterPage extends StatelessWidget {
                 return const Center(child: CircularProgressIndicator());
               }
             case Success():
-              if (context.mounted) {
-                Future.microtask(() {
+              statusText = "Bruger oprettet";
+              Future.microtask(() {
+                Future.delayed(const Duration(seconds: 2), () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => HomeNavigation()),
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
                   );
                 });
-              }
+              });
             case Error(message: final message):
               statusText = message;
           }
@@ -113,7 +112,7 @@ class RegisterPage extends StatelessWidget {
                         child: const Padding(
                           padding: EdgeInsets.all(8),
                           child: Text(
-                            "Log ind",
+                            "Opret",
                             style: TextStyle(fontSize: 20),
                           ),
                         ),
@@ -125,7 +124,8 @@ class RegisterPage extends StatelessWidget {
                           text: TextSpan(
                             children: <TextSpan>[
                               const TextSpan(
-                                  text: 'Har du allerede en konto? Klik '),
+                                  text: 'Har du allerede en konto? Klik ',
+                                  style: TextStyle(color: Colors.black)),
                               TextSpan(
                                 text: 'her',
                                 style: TextStyle(
@@ -134,7 +134,8 @@ class RegisterPage extends StatelessWidget {
                               ),
                               const TextSpan(
                                   text:
-                                      ' for at logge ind på din konto i stedet.'),
+                                      ' for at logge ind på din konto i stedet.',
+                                  style: TextStyle(color: Colors.black)),
                             ],
                           ),
                         ),
