@@ -95,10 +95,7 @@ class _BattlePage extends StatelessWidget {
         FilledButton(
           onPressed: () => Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (builder) => ChangeNotifierProvider(
-                create: (context) => Battle(),
-                builder: (context, _) => BattlePage(),
-              ),
+              builder: (builder) => BattlePage(),
             ),
           ),
           child: Padding(

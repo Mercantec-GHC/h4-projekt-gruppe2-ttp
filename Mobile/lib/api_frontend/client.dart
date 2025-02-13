@@ -4,6 +4,21 @@ import 'package:http/http.dart' as http;
 class Client {
   final String apiUrl = "http://10.135.51.101:8000";
 
+  Future<ClientResult<String>> login(String username, String password) async {
+    final body = json.encode({"username": username, "password": password});
+
+    var res = await http.post(Uri.parse("$apiUrl/login"),
+        headers: {"Content-Type": "application/json"}, body: body);
+
+    var resData = json.decode(res.body);
+
+    if (resData["ok"]) {
+      return SuccessResult(data: resData["token"]);
+    } else {
+      return ErrorResult(message: resData["message"]);
+    }
+  }
+
   Future<ClientResult<Null>> register(String username, String password) async {
     final body = json.encode({"username": username, "password": password});
 

@@ -1,7 +1,6 @@
 import 'dart:collection';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:mobile/battle_naming.dart';
 
 int _randomInt({required int min, required int max}) {
@@ -22,6 +21,9 @@ class Troop {
 
   void _hurt(int damage) {
     _health -= damage;
+    if (_health < 0) {
+      _health = 0;
+    }
   }
 
   Troop({required this.name, required this.damage, required health})
@@ -37,6 +39,9 @@ class Base {
 
   void _hurt(int damage) {
     _health -= damage;
+    if (_health < 0) {
+      _health = 0;
+    }
   }
 
   Base({required this.name, required health})
@@ -51,7 +56,7 @@ Troop _randomTroop() {
   return Troop(name: name, health: health, damage: damage);
 }
 
-class Battle extends ChangeNotifier {
+class Battle {
   final Base enemy = Base(name: randomEnemyName(), health: 10);
   final Base player = Base(name: "Dig", health: 10);
   final Queue<Troop> _enemyTroops = ListQueue();
@@ -77,7 +82,7 @@ class Battle extends ChangeNotifier {
 
   bool _shouldAddEnemyTrops() {
     final diceroll = _randomInt(min: 0, max: 100);
-    return diceroll < 20;
+    return diceroll < 5;
   }
 
   void _addEnemyTroop() {
@@ -108,7 +113,6 @@ class Battle extends ChangeNotifier {
 
   void addPlayerTroop() {
     _playerTroops.addLast(_randomTroop());
-    notifyListeners();
   }
 
   void step() {
@@ -116,12 +120,10 @@ class Battle extends ChangeNotifier {
     /// 1. remove any dead troops
     /// 2. roll a dice to decide whether to add an enemy troop
     /// 3. apply damage to first soldier or base in line
-    /// 4. update notifier
     /// this leaves a dead soldier for 1 iteration, this is currently on purpose, so you can tell a soldier has died
     _cullDeadTroops();
     _addEnemyTroop();
     _applyPlayerAttack();
     _applyEnemyAttack();
-    notifyListeners();
   }
 }

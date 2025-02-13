@@ -1,10 +1,8 @@
 import 'dart:async';
 
-
 import 'package:flutter/material.dart';
 import 'package:mobile/battle.dart';
 import 'package:mobile/win_overlay.dart';
-import 'package:provider/provider.dart';
 
 class _Healthbar extends StatelessWidget {
   const _Healthbar({
@@ -24,7 +22,9 @@ class _Healthbar extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 1.0),
         child: Container(
           height: height,
-          color: filled ? Theme.of(context).primaryColor : Colors.redAccent,
+          color: filled
+              ? ColorScheme.of(context).primary
+              : ColorScheme.of(context).error,
         ),
       ),
     );
@@ -77,9 +77,14 @@ class _ActiveTroop extends StatelessWidget {
         children: [
           Row(children: [
             Expanded(
-                child: Text(name,
-                    style: TextStyle(
-                        fontSize: _fontSize, fontWeight: FontWeight.bold))),
+              child: Text(
+                name,
+                style: TextStyle(
+                  fontSize: _fontSize,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
             Text(" ", style: TextStyle(fontSize: _fontSize)),
             Text("$damage 🗡️", style: TextStyle(fontSize: _fontSize))
           ]),
@@ -148,10 +153,7 @@ class _Base extends StatelessWidget {
             ? VerticalDirection.down
             : VerticalDirection.up,
         children: [
-          Text(
-            _name,
-            style: TextStyle(fontSize: 24.0),
-          ),
+          Text(_name, style: TextStyle(fontSize: 24.0)),
           SizedBox(height: 16.0),
           _Healthbar(health: _health, maxHealth: _maxHealth, height: 32),
         ]);
@@ -166,16 +168,14 @@ class _TroopList extends StatelessWidget {
   final _activeTroops = 1;
   final _maxTroops = 3;
 
-  Iterable<_ActiveTroop> _active() => troops.take(1).map(
-        (troop) => _ActiveTroop.fromTroop(
-          troop,
-          unitType: type,
-        ),
-      );
+  Iterable<_ActiveTroop> _active() => troops
+      .take(1)
+      .map((troop) => _ActiveTroop.fromTroop(troop, unitType: type));
 
-  Iterable<_InactiveTroop> _inactive() => troops.skip(1).take(_maxTroops).map(
-        (troop) => _InactiveTroop.fromTroop(troop),
-      );
+  Iterable<_InactiveTroop> _inactive() => troops
+      .skip(1)
+      .take(_maxTroops)
+      .map((troop) => _InactiveTroop.fromTroop(troop));
 
   @override
   Widget build(BuildContext context) {
@@ -201,87 +201,81 @@ class _TroopList extends StatelessWidget {
   }
 }
 
-class BattlePage extends StatelessWidget {
-  BattlePage({super.key});
-  //timer needs a new home
-  Timer? _periodicTimer;
+class BattlePage extends StatefulWidget {
+  const BattlePage({super.key});
 
+  @override
+  State<BattlePage> createState() => _BattlePageState();
+}
+
+class _BattlePageState extends State<BattlePage> {
+  late final Timer _battleTimer;
+  final _battle = Battle();
+
+  @override
   void dispose() {
-  _periodicTimer?.cancel();
-}
-
-void _startTimer(Battle battle, context) {
-  if(_periodicTimer == null) {
-    const oneSecond = Duration(seconds: 1);
-  _periodicTimer = Timer.periodic(oneSecond, (timer) {
-    if (battle.enemy.health == 0 || battle.player.health == 0) {
-      dispose();
-      if(battle.enemy.health == 0) {
-        //Player win
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => Win(victory: true)));
-      }
-      else {
-        //Player lost
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => Win(victory: false)));
-      }
-    }
-    else {
-    battle.step();
-    }
-  });
+    _battleTimer.cancel();
+    super.dispose();
   }
-  
-}
+
+  void _battleTick() {
+    final gameOver = _battle.enemy.health <= 0 || _battle.player.health <= 0;
+    if (!gameOver) {
+      setState(() => _battle.step());
+      return;
+    }
+    final playerWon = _battle.enemy.health <= 0;
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+        builder: (context) => BattleResultPage(victory: playerWon)));
+  }
+
+  void _addSoldier() {
+    setState(() => _battle.addPlayerTroop());
+  }
+
+  @override
+  void initState() {
+    _battleTimer = Timer.periodic(Duration(seconds: 1), (_) => _battleTick());
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
         padding: EdgeInsets.all(16.0),
-        child: Consumer<Battle>(
-          builder: (context, battle, child) => Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                  onPressed: () {
-                    _startTimer(battle, context);
-                  },
-                  child: Text("Start Game")),
-              ElevatedButton(
-                  onPressed: () {
-                    battle.addPlayerTroop();
-                  },
-                  child: Text("Add player soldier")),
-              ...<Widget>[
-                _Base.fromBase(
-                  battle.enemy,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: _addSoldier,
+              child: Text("Add player soldier"),
+            ),
+            ...<Widget>[
+              _Base.fromBase(_battle.enemy, type: UnitType.enemy),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 25.0, vertical: 16.0),
+                child: _TroopList(
+                  troops: _battle.enemyTroops,
                   type: UnitType.enemy,
                 ),
-                Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 25.0, vertical: 16.0),
-                    child: _TroopList(
-                        troops: battle.enemyTroops, type: UnitType.enemy)),
-              ],
-              Text("⚔️", style: TextStyle(fontSize: 32.0)),
-              ...<Widget>[
-                Padding(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 25.0, vertical: 16.0),
-                  child: _TroopList(
-                    troops: battle.playerTroops,
-                    type: UnitType.player,
-                  ),
-                ),
-                _Base.fromBase(battle.player, type: UnitType.player),
-              ],
+              ),
             ],
-          ),
+            Text("⚔️", style: TextStyle(fontSize: 32.0)),
+            ...<Widget>[
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 25.0, vertical: 16.0),
+                child: _TroopList(
+                  troops: _battle.playerTroops,
+                  type: UnitType.player,
+                ),
+              ),
+              _Base.fromBase(_battle.player, type: UnitType.player),
+            ],
+          ],
         ),
       ),
     );
   }
 }
-
-

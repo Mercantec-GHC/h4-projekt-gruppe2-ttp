@@ -1,11 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/api_frontend/client.dart';
+import 'package:mobile/home_page.dart';
 import 'package:mobile/logo.dart';
 import 'package:mobile/register_page.dart';
+import 'package:mobile/win_overlay.dart';
 
-class LoginPage extends StatelessWidget {
+sealed class _LoginPageStatus {}
+
+final class _Ready extends _LoginPageStatus {}
+
+final class _Loading extends _LoginPageStatus {}
+
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
-  void _loginPressed() {}
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final username = TextEditingController();
+  final password = TextEditingController();
+  _LoginPageStatus _status = _Ready();
+
+  _loginPressed(String username, String password) async {
+    setState(() => _status = _Loading());
+    final response = await Client().login(username, password);
+    if (!mounted) return;
+    setState(() => _status = _Ready());
+    switch (response) {
+      case SuccessResult(data: final _):
+        final snackBar = SnackBar(content: Text("Logged ind!"));
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => HomeNavigation()));
+        return;
+      case ErrorResult(message: final message):
+        final snackBar = SnackBar(content: Text(message));
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        return;
+    }
+  }
+
+  _gotoRegister() {
+    Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => RegisterPage()));
+  }
+
+  _bypassLogin() {
+    Navigator.of(context)
+        .pushReplacement(MaterialPageRoute(builder: (_) => HomeNavigation()));
+  }
+
+  _gotoBattleResult(bool victory) {
+    Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => BattleResultPage(victory: victory)));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,70 +63,80 @@ class LoginPage extends StatelessWidget {
       body: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Flexible(
-            child:
-                Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              const Logo(),
-              const SizedBox(height: 16),
-              const SizedBox(width: 150, child: Divider()),
-              const SizedBox(height: 16),
-              const SizedBox(
-                width: 200,
-                child: TextField(
-                  decoration: InputDecoration(
-                    label: Text("Brugernavn"),
-                    border: OutlineInputBorder(),
-                  ),
+          Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            const Logo(),
+            const SizedBox(height: 16),
+            const SizedBox(width: 150, child: Divider()),
+            const SizedBox(height: 16),
+            const SizedBox(
+              width: 200,
+              child: TextField(
+                decoration: InputDecoration(
+                  label: Text("Brugernavn"),
+                  border: OutlineInputBorder(),
                 ),
               ),
-              const SizedBox(height: 16),
-              const SizedBox(
-                width: 200,
-                child: TextField(
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    label: Text("Adgangskode"),
-                    border: OutlineInputBorder(),
-                  ),
+            ),
+            const SizedBox(height: 16),
+            const SizedBox(
+              width: 200,
+              child: TextField(
+                obscureText: true,
+                decoration: InputDecoration(
+                  label: Text("Adgangskode"),
+                  border: OutlineInputBorder(),
                 ),
               ),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: _loginPressed,
-                child: const Padding(
-                  padding: EdgeInsets.all(8),
-                  child: Text(
-                    "Log ind",
-                    style: TextStyle(fontSize: 20),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (context) => RegisterPage()),
-                ),
-                child: RichText(
-                  text: TextSpan(
-                    children: <TextSpan>[
-                      const TextSpan(
-                          text: 'Har du ikke en konto? Klik ',
-                          style: TextStyle(color: Colors.black)),
-                      TextSpan(
-                        text: 'her',
-                        style: TextStyle(
-                            color: Theme.of(context).primaryColor,
-                            decoration: TextDecoration.underline),
+            ),
+            const SizedBox(height: 16),
+            _status is _Ready
+                ? FilledButton(
+                    onPressed: () =>
+                        _loginPressed(username.text, password.text),
+                    child: const Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Text(
+                        "Log ind",
+                        style: TextStyle(fontSize: 20),
                       ),
-                      const TextSpan(
-                          text: ' for at registrere en ny konto i stedet.',
-                          style: TextStyle(color: Colors.black)),
-                    ],
-                  ),
+                    ),
+                  )
+                : CircularProgressIndicator(),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: _gotoRegister,
+              child: RichText(
+                text: TextSpan(
+                  children: <TextSpan>[
+                    const TextSpan(
+                        text: 'Har du ikke en konto? Klik ',
+                        style: TextStyle(color: Colors.black)),
+                    TextSpan(
+                      text: 'her',
+                      style: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          decoration: TextDecoration.underline),
+                    ),
+                    const TextSpan(
+                        text: ' for at registrere en ny konto i stedet.',
+                        style: TextStyle(color: Colors.black)),
+                  ],
                 ),
               ),
-            ]),
-          )
+            ),
+            OutlinedButton(
+              onPressed: _bypassLogin,
+              child: Text("bypass login 😈🙏"),
+            ),
+            OutlinedButton(
+              onPressed: () => _gotoBattleResult(true),
+              child: Text("winner winner chicken dinner"),
+            ),
+            OutlinedButton(
+              onPressed: () => _gotoBattleResult(false),
+              child: Text("taberskærm"),
+            ),
+          ]),
         ],
       ),
     );
