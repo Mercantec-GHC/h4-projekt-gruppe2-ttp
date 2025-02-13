@@ -1,13 +1,10 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:mobile/home_page.dart';
 
 class Client {
   final String apiUrl = "http://10.135.51.101:8000";
 
-  Future<ClientResult<Null>> register(
-      String username, String password, BuildContext context) async {
+  Future<ClientResult<Null>> register(String username, String password) async {
     final body = json.encode({"username": username, "password": password});
 
     var res = await http.post(Uri.parse("$apiUrl/createUser"),
@@ -16,12 +13,6 @@ class Client {
     var resData = json.decode(res.body);
 
     if (resData["ok"]) {
-      if (context.mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => HomeNavigation()),
-        );
-      }
       return SuccessResult(data: null);
     } else {
       return ErrorResult(message: resData["message"]);

@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/logo.dart';
-import 'package:mobile/apiFrontend/client.dart';
+import 'package:mobile/api_frontend/client.dart';
+import 'package:mobile/home_page.dart';
 import 'package:provider/provider.dart';
 
 class RegisterRequest extends ChangeNotifier {
   Response status = Unset();
 
-  void register(String username, String password, BuildContext context) async {
+  void register(String username, String password) async {
     status = Loading();
     notifyListeners();
 
-    var result = await Client().register(username, password, context);
+    var result = await Client().register(username, password);
 
     status = switch (result) {
       SuccessResult() => Success(),
@@ -61,7 +62,14 @@ class RegisterPage extends StatelessWidget {
                 return const Center(child: CircularProgressIndicator());
               }
             case Success():
-              statusText = "Success";
+              if (context.mounted) {
+                Future.microtask(() {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomeNavigation()),
+                  );
+                });
+              }
             case Error(message: final message):
               statusText = message;
           }
@@ -101,7 +109,7 @@ class RegisterPage extends StatelessWidget {
                       const SizedBox(height: 16),
                       FilledButton(
                         onPressed: () => registerRequest.register(
-                            username.text, password.text, context),
+                            username.text, password.text),
                         child: const Padding(
                           padding: EdgeInsets.all(8),
                           child: Text(
