@@ -68,16 +68,20 @@ async function getUserStats(db: Db, req: string): Promise<Result<OutputStats, st
     if (userStats != null) {
         return ok(userStats);
      }
+    else {
+        return err("No user found")
+    }
 } 
 
-async function saveUserStats(db: Db, req: InputStats, username: string): Promise<Result<void | string>> {
+async function saveUserStats(db: Db, req: InputStats, username: string): Promise<Result<string, string>> {
     const res = await db.saveUserStats(username, req)
-    if (res != null) {
-        return err("Something went wrong")
+    if (res == null){
+        return ok("Success");
     }
     else {
-        return ok();
+        return err("Something went wrong")
     }
+    
 }
 
 const port = 8000;

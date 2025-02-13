@@ -12,7 +12,7 @@ export type OutputStats = {
     wins: number;
     correctness: number;
     gamesplayed: number;
-    lost: number;
+    losses: number;
 };
 
 export type InputStats = {

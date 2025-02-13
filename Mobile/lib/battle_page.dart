@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:mobile/battle.dart';
+import 'package:mobile/win_overlay.dart';
 import 'package:provider/provider.dart';
 
 class _Healthbar extends StatelessWidget {
@@ -202,30 +203,34 @@ class _TroopList extends StatelessWidget {
 
 class BattlePage extends StatelessWidget {
   BattlePage({super.key});
-  
+  //timer needs a new home
   Timer? _periodicTimer;
 
   void dispose() {
   _periodicTimer?.cancel();
 }
 
-void _startTimer(Battle battle) {
-  const oneSecond = Duration(seconds: 1);
+void _startTimer(Battle battle, context) {
+  if(_periodicTimer == null) {
+    const oneSecond = Duration(seconds: 1);
   _periodicTimer = Timer.periodic(oneSecond, (timer) {
     if (battle.enemy.health == 0 || battle.player.health == 0) {
       dispose();
       if(battle.enemy.health == 0) {
-        //Player won
+        //Player win
+        Navigator.push(context, MaterialPageRoute(builder: (context) => Win(victory: true)));
       }
       else {
         //Player lost
+         Navigator.push(context, MaterialPageRoute(builder: (context) => Win(victory: false)));
       }
-    
     }
     else {
     battle.step();
     }
   });
+  }
+  
 }
 
   @override
@@ -240,7 +245,7 @@ void _startTimer(Battle battle) {
             children: [
               ElevatedButton(
                   onPressed: () {
-                    _startTimer(battle);
+                    _startTimer(battle, context);
                   },
                   child: Text("Start Game")),
               ElevatedButton(
