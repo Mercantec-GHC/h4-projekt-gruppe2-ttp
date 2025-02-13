@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/logo.dart';
 import 'package:mobile/register_page.dart';
-import 'package:mobile/gorbie.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
   void _loginPressed() {}
-
-  void _registerPressed() {}
 
   @override
   Widget build(BuildContext context) {
@@ -56,18 +53,15 @@ class LoginPage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               TextButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return RegisterPage();
-                    },
-                  ),
+                onPressed: () => Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => RegisterPage()),
                 ),
                 child: RichText(
                   text: TextSpan(
                     children: <TextSpan>[
-                      const TextSpan(text: 'Har du ikke en konto? Klik '),
+                      const TextSpan(
+                          text: 'Har du ikke en konto? Klik ',
+                          style: TextStyle(color: Colors.black)),
                       TextSpan(
                         text: 'her',
                         style: TextStyle(
@@ -75,7 +69,8 @@ class LoginPage extends StatelessWidget {
                             decoration: TextDecoration.underline),
                       ),
                       const TextSpan(
-                          text: ' for at registrere en ny konto i stedet.'),
+                          text: ' for at registrere en ny konto i stedet.',
+                          style: TextStyle(color: Colors.black)),
                     ],
                   ),
                 ),
