@@ -4,15 +4,21 @@ export type User = {
     id: string;
     name: string;
     password: string;
-    stats: Stats;
+    stats: OutputStats;
 };
 
-export type Stats = {
+export type OutputStats = {
     winratio: number;
     wins: number;
     correctness: number;
     gamesplayed: number;
     lost: number;
+};
+
+export type InputStats = {
+    won: boolean;
+    correctanswers: number;
+    totalanswers: number;
 };
 
 export type Questions = {
@@ -42,6 +48,6 @@ export function token(user: User["id"]): Token {
 export interface Db {
     createUser(username: string, password: HashedPassword): Promise<null>;
     userFromName(username: string): Promise<User | null>;
-    getUserStats(username: string): Promise<Stats | null>;
-    saveUserStats(username: string, stats: Stats): Promise<null>
+    getUserStats(username: string): Promise<OutputStats | null>;
+    saveUserStats(username: string, stats: InputStats): Promise<null>
 }

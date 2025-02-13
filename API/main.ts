@@ -15,12 +15,18 @@ interface LoginRequest {
     password: string;
 }
 
-interface Stats {
-    winratio: number;
-    wins: number;
-    correctness: number;
-    gamesplayed: number;
-    lost: number;
+interface InputStats {
+    won: boolean;
+    correctanswers: number;
+    totalanswers: number;
+}
+
+interface OutputStats {
+    winratio: number,
+    gamesplayed: number,
+    correctness: number,
+    wins: number,
+    losses: number,
 }
 
 // Creates user
@@ -56,7 +62,7 @@ async function login(db: Db, req: LoginRequest): Promise<Result<Token, string>> 
 
     return ok(token(existingUser.id));
 }
-async function getUserStats(db: Db, req: string): Promise<Result<Stats, string>> {
+async function getUserStats(db: Db, req: string): Promise<Result<OutputStats, string>> {
     // Retrieves stats from db
     const userStats = await db.getUserStats(req)
     if (userStats != null) {
@@ -64,17 +70,19 @@ async function getUserStats(db: Db, req: string): Promise<Result<Stats, string>>
      }
 } 
 
-async function saveUserStats(db: Db, req: string): Promise<Result<void | string>> {
-    
+async function saveUserStats(db: Db, req: InputStats, username: string): Promise<Result<void | string>> {
+    const res = await db.saveUserStats(username, req)
+    if (res != null) {
+        return err("Something went wrong")
+    }
+    else {
+        return ok();
+    }
 }
 
 const port = 8000;
 
 const router = new oak.Router();
-
-router.post("/test", async (ctx) => {
-    console.log(await ctx.request.body.json());
-});
 
 router.post("/createUser", async (ctx) => {
     const req: RegisterRequest = await ctx.request.body.json();
@@ -124,7 +132,7 @@ router.post("/getstats", async (ctx) => {
     } 
 
     const res = (await getUserStats(await MariaDb.connect(), req)).match(
-        (_ok: Stats) => {
+        (_ok: OutputStats) => {
             ctx.response.body = { ok: true, message: "Success", stats: res};
         },
         (err: string) => {
@@ -136,17 +144,17 @@ router.post("/getstats", async (ctx) => {
 
 
 router.post("/savestats/:user", async (ctx) => {
+    const user = ctx.params.user
     const req = await ctx.request.body.json()
-
     if (req == null) {
         ctx.response.body = { ok: true, message: "Unknown request"};
         return;
     }
     
-    const res = (await saveUserStats(await MariaDb.connect(), req)).match(
+    (await saveUserStats(await MariaDb.connect(), req, user)).match(
         (_ok: string) => {
             ctx.response.body = { ok: true, message: "success"}
-        },
+        }, 
         (err: string) => {
             ctx.response.body = {ok: false, message: err}
         }

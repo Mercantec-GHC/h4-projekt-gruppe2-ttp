@@ -1,4 +1,4 @@
-import { Db, User, uuid, Stats } from "./db.ts";
+import { Db, User, uuid, OutputStats, InputStats } from "./db.ts";
 import { HashedPassword } from "./hashed_password.ts";
 import { Client } from "https://deno.land/x/mysql@v2.12.1/mod.ts";
 
@@ -41,7 +41,7 @@ export class MariaDb implements Db {
         return user as User;
     }
 
-    public async getUserStats(username: string): Promise<Stats | null> {
+    public async getUserStats(username: string): Promise<OutputStats | null> {
         const result = await this.connection.execute("SELECT * FROM user_stats WHERE username = ?", [username]);
         if (!result.rows || result.rows.length === 0) {
             return null;
@@ -50,20 +50,33 @@ export class MariaDb implements Db {
         if (!user) {
             return null;
         }
-        return user as Stats;
+        return user as OutputStats;
     }
 
-    public async saveUserStats(username: string, stats: Stats): Promise<null> {
+    public async saveUserStats(username: string, stats: InputStats): Promise<null> {
         const current = await this.getUserStats(username);
+        const correctness = stats.correctanswers / stats.totalanswers
+
         if ( current == null ) {
-        const result = await this.connection.execute("INSERT INTO user_stats(win_ratio, wins, correctness, games_played, lost, username) VALUES(?,?,?,?,?,?)", [stats.winratio, stats.wins, stats.correctness, stats.gamesplayed, stats.lost, username])
-            
+        //creates stat record for user in db with a win
+        if (stats.won == true) {
+            await this.connection.execute("INSERT INTO user_stats(win_ratio, wins, correctness, games_played, lost, username) VALUES(?,?,?,?,?,?)", [1, 1, correctness, 1, 0, username])   
+        }
+        //creates stat record for user in db with a loss
+        if (stats.won == false) {
+            await this.connection.execute("INSERT INTO user_stats(win_ratio, wins, correctness, games_played, lost, username) VALUES(?,?,?,?,?,?)", [0, 0, correctness, 1, 1, username])   
+        }
             return null;
         }
-        stats.winratio = current?.wins / current?.lost; 
-        stats.correctness = current.correctness * stats.correctness
-
-        const result = await this.connection.execute("UPDATE user_stats SET win_ratio = ?, wins = ?, correctness = ?, games_played = ?, lost = ? WHERE username = ?", [stats.winratio, stats.wins, stats.correctness, stats.gamesplayed, stats.lost, username])
+        //updates stat record for user in db with a win or loss
+        
+        if (stats.won == true) {
+            const winratio = current.wins+1 / current.gamesplayed+1; 
+            await this.connection.execute("UPDATE user_stats SET win_ratio = ?, wins = ?, correctness = ?, games_played = ?, lost = ? WHERE username = ?", [winratio, current.wins+1, correctness, current.gamesplayed + 1, current.lost, username])
+        } else {
+            const winratio = current.wins / current.gamesplayed+1; 
+            await this.connection.execute("UPDATE user_stats SET win_ratio = ?, wins = ?, correctness = ?, games_played = ?, lost = ? WHERE username = ?", [winratio, current.wins, correctness, current.gamesplayed + 1, current.lost+1, username])
+        }
         return null;
     }
 }
