@@ -2,113 +2,85 @@ import 'package:flutter/material.dart';
 import 'package:mobile/login_page.dart';
 import 'package:mobile/logo.dart';
 import 'package:mobile/api_frontend/client.dart';
-import 'package:provider/provider.dart';
 
-class RegisterRequest extends ChangeNotifier {
-  Response status = Unset();
+sealed class RegisterPageStatus {}
 
-  void register(String username, String password) async {
-    status = Loading();
-    notifyListeners();
+final class Ready extends RegisterPageStatus {}
 
-    var result = await Client().register(username, password);
+final class Loading extends RegisterPageStatus {}
 
-    status = switch (result) {
-      SuccessResult() => Success(),
-      ErrorResult(message: final message) => Error(message: message)
-    };
-    notifyListeners();
-  }
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
+
+  @override
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-sealed class Response {}
-
-final class Unset extends Response {}
-
-final class Loading extends Response {}
-
-final class Success extends Response {}
-
-final class Error extends Response {
-  final String message;
-  Error({required this.message});
-}
-
-class RegisterPage extends StatelessWidget {
-  RegisterPage({super.key});
-
+class _RegisterPageState extends State<RegisterPage> {
   final username = TextEditingController();
   final password = TextEditingController();
+  RegisterPageStatus status = Ready();
+
+  _registerRequest(String username, String password) async {
+    setState(() => status = Loading());
+    final response = await Client().register(username, password);
+    if (!mounted) return;
+    setState(() => status = Ready());
+    switch (response) {
+      case SuccessResult<Null>():
+        final snackBar = SnackBar(content: Text("Bruger oprettet!"));
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        Navigator.of(context)
+            .pushReplacement(MaterialPageRoute(builder: (_) => LoginPage()));
+        return;
+      case ErrorResult<Null>(message: final message):
+        final snackBar = SnackBar(content: Text(message));
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        return;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ChangeNotifierProvider<RegisterRequest>(
-        create: (BuildContext context) {
-          return RegisterRequest();
-        },
-        builder: (BuildContext context, Widget? child) {
-          var registerRequest = context.watch<RegisterRequest>();
-          var statusText = "";
-          var isLoading = false;
-          switch (registerRequest.status) {
-            case Unset():
-              statusText = "";
-            case Loading():
-              isLoading = true;
-              if (isLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-            case Success():
-              statusText = "Bruger oprettet";
-              Future.microtask(() {
-                Future.delayed(const Duration(seconds: 2), () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginPage()),
-                  );
-                });
-              });
-            case Error(message: final message):
-              statusText = message;
-          }
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Flexible(
-                child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Logo(),
-                      const SizedBox(height: 16),
-                      const SizedBox(width: 150, child: Divider()),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: 200,
-                        child: TextField(
-                          controller: username,
-                          decoration: const InputDecoration(
-                            label: Text("Brugernavn"),
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: 200,
-                        child: TextField(
-                          obscureText: true,
-                          controller: password,
-                          decoration: const InputDecoration(
-                            label: Text("Adgangskode"),
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      FilledButton(
-                        onPressed: () => registerRequest.register(
-                            username.text, password.text),
+      body: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Flexible(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Logo(),
+                const SizedBox(height: 16),
+                const SizedBox(width: 150, child: Divider()),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: 200,
+                  child: TextField(
+                    controller: username,
+                    decoration: const InputDecoration(
+                      label: Text("Brugernavn"),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: 200,
+                  child: TextField(
+                    obscureText: true,
+                    controller: password,
+                    decoration: const InputDecoration(
+                      label: Text("Adgangskode"),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                status is Ready
+                    ? FilledButton(
+                        onPressed: () =>
+                            _registerRequest(username.text, password.text),
                         child: const Padding(
                           padding: EdgeInsets.all(8),
                           child: Text(
@@ -116,41 +88,35 @@ class RegisterPage extends StatelessWidget {
                             style: TextStyle(fontSize: 20),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: RichText(
-                          text: TextSpan(
-                            children: <TextSpan>[
-                              const TextSpan(
-                                  text: 'Har du allerede en konto? Klik ',
-                                  style: TextStyle(color: Colors.black)),
-                              TextSpan(
-                                text: 'her',
-                                style: TextStyle(
-                                    color: Theme.of(context).primaryColor,
-                                    decoration: TextDecoration.underline),
-                              ),
-                              const TextSpan(
-                                  text:
-                                      ' for at logge ind på din konto i stedet.',
-                                  style: TextStyle(color: Colors.black)),
-                            ],
-                          ),
+                      )
+                    : CircularProgressIndicator(),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (_) => LoginPage())),
+                  child: RichText(
+                    text: TextSpan(
+                      children: <TextSpan>[
+                        const TextSpan(
+                            text: 'Har du allerede en konto? Klik ',
+                            style: TextStyle(color: Colors.black)),
+                        TextSpan(
+                          text: 'her',
+                          style: TextStyle(
+                              color: Theme.of(context).primaryColor,
+                              decoration: TextDecoration.underline),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        statusText,
-                        style: TextStyle(
-                            fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                    ]),
-              )
-            ],
-          );
-        },
+                        const TextSpan(
+                            text: ' for at logge ind på din konto i stedet.',
+                            style: TextStyle(color: Colors.black)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        ],
       ),
     );
   }

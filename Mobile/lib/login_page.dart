@@ -53,13 +53,8 @@ class LoginPage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               TextButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return RegisterPage();
-                    },
-                  ),
+                onPressed: () => Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => RegisterPage()),
                 ),
                 child: RichText(
                   text: TextSpan(
