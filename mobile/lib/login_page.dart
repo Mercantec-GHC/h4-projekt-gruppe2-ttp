@@ -68,9 +68,10 @@ class _LoginPageState extends State<LoginPage> {
             const SizedBox(height: 16),
             const SizedBox(width: 150, child: Divider()),
             const SizedBox(height: 16),
-            const SizedBox(
+            SizedBox(
               width: 200,
               child: TextField(
+                controller: username,
                 decoration: InputDecoration(
                   label: Text("Brugernavn"),
                   border: OutlineInputBorder(),
@@ -78,10 +79,11 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
             const SizedBox(height: 16),
-            const SizedBox(
+            SizedBox(
               width: 200,
               child: TextField(
                 obscureText: true,
+                controller: password,
                 decoration: InputDecoration(
                   label: Text("Adgangskode"),
                   border: OutlineInputBorder(),
