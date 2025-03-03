@@ -211,10 +211,12 @@ class BattlePage extends StatefulWidget {
 class _BattlePageState extends State<BattlePage> {
   late final Timer _battleTimer;
   final _battle = Battle();
+  final List<OverlayEntry> _overlayEntries = [];
 
   @override
   void dispose() {
     _battleTimer.cancel();
+    _removeAllOverlays();
     super.dispose();
   }
 
@@ -222,6 +224,8 @@ class _BattlePageState extends State<BattlePage> {
     final gameOver = _battle.enemy.health <= 0 || _battle.player.health <= 0;
     if (!gameOver) {
       setState(() => _battle.step());
+      _removeAllOverlays();
+      _dangerIndicator();
       return;
     }
     final playerWon = _battle.enemy.health <= 0;
@@ -231,6 +235,46 @@ class _BattlePageState extends State<BattlePage> {
 
   void _addSoldier() {
     setState(() => _battle.addPlayerTroop());
+  }
+
+  void dangerOverlay() {
+    final overlay = Overlay.of(context);
+    final overlayEntry = OverlayEntry(
+      builder: (context) => IgnorePointer(
+        ignoring: true,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              colors: [
+                Colors.transparent,
+                const Color.fromARGB(80, 255, 82, 82)
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlay.insert(overlayEntry);
+    _overlayEntries.add(overlayEntry);
+
+    if (_battle.playerTroops.isNotEmpty) {
+      overlayEntry.remove();
+      _overlayEntries.remove(overlayEntry);
+    }
+  }
+
+  void _dangerIndicator() {
+    if (_battle.enemyTroops.isNotEmpty && _battle.playerTroops.isEmpty) {
+      dangerOverlay();
+    }
+  }
+
+  void _removeAllOverlays() {
+    for (var overlayEntry in _overlayEntries) {
+      overlayEntry.remove();
+    }
+    _overlayEntries.clear();
   }
 
   @override
