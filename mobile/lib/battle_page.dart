@@ -208,15 +208,32 @@ class BattlePage extends StatefulWidget {
   State<BattlePage> createState() => _BattlePageState();
 }
 
-class _BattlePageState extends State<BattlePage> {
+class _BattlePageState extends State<BattlePage> with TickerProviderStateMixin {
   late final Timer _battleTimer;
   final _battle = Battle();
   final List<OverlayEntry> _overlayEntries = [];
+  late AnimationController _visualTimerController;
+
+  @override
+  void initState() {
+    final battleTick = Duration(seconds: 1);
+    _battleTimer = Timer.periodic(battleTick, (_) => _battleTick());
+    _visualTimerController = AnimationController(
+      vsync: this,
+      duration: battleTick,
+    )
+      ..addListener(() {
+        setState(() {});
+      })
+      ..repeat(period: battleTick);
+    super.initState();
+  }
 
   @override
   void dispose() {
     _battleTimer.cancel();
     _removeAllOverlays();
+    _visualTimerController.dispose();
     super.dispose();
   }
 
@@ -278,47 +295,56 @@ class _BattlePageState extends State<BattlePage> {
   }
 
   @override
-  void initState() {
-    _battleTimer = Timer.periodic(Duration(seconds: 1), (_) => _battleTick());
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              onPressed: _addSoldier,
-              child: Text("Add player soldier"),
+      body: Stack(
+        children: [
+          Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: _addSoldier,
+                  child: Text("Add player soldier"),
+                ),
+                ...<Widget>[
+                  _Base.fromBase(_battle.enemy, type: UnitType.enemy),
+                  Padding(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 25.0, vertical: 16.0),
+                    child: _TroopList(
+                      troops: _battle.enemyTroops,
+                      type: UnitType.enemy,
+                    ),
+                  ),
+                ],
+                Text("⚔️", style: TextStyle(fontSize: 32.0)),
+                ...<Widget>[
+                  Padding(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 25.0, vertical: 16.0),
+                    child: _TroopList(
+                      troops: _battle.playerTroops,
+                      type: UnitType.player,
+                    ),
+                  ),
+                  _Base.fromBase(_battle.player, type: UnitType.player),
+                ],
+              ],
             ),
-            ...<Widget>[
-              _Base.fromBase(_battle.enemy, type: UnitType.enemy),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 25.0, vertical: 16.0),
-                child: _TroopList(
-                  troops: _battle.enemyTroops,
-                  type: UnitType.enemy,
-                ),
+          ),
+          Align(
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: CircularProgressIndicator(
+                value: _visualTimerController.value,
               ),
-            ],
-            Text("⚔️", style: TextStyle(fontSize: 32.0)),
-            ...<Widget>[
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 25.0, vertical: 16.0),
-                child: _TroopList(
-                  troops: _battle.playerTroops,
-                  type: UnitType.player,
-                ),
-              ),
-              _Base.fromBase(_battle.player, type: UnitType.player),
-            ],
-          ],
-        ),
+            ),
+          )
+        ],
       ),
     );
   }
