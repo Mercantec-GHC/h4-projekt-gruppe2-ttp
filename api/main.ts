@@ -22,8 +22,8 @@ interface InputStats {
 }
 
 interface OutputStats {
-  winratio: number;
-  gamesplayed: number;
+  win_ratio: number;
+  games_played: number;
   correctness: number;
   wins: number;
   losses: number;

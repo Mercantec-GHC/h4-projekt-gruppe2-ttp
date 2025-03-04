@@ -102,7 +102,6 @@ export class MariaDb implements Db {
       return null;
     }
     //updates stat record for user in db with a win or loss
-
     if (stats.won == true) {
       const winratio = (current.wins + 1) / (current.games_played + 1);
       await this.connection.execute(
@@ -118,6 +117,7 @@ export class MariaDb implements Db {
       );
     } else {
       const winratio = (current.wins) / (current.games_played + 1);
+      console.log(current.losses);
       await this.connection.execute(
         "UPDATE user_stats SET win_ratio = ?, wins = ?, correctness = ?, games_played = ?, lost = ? WHERE username = ?",
         [
@@ -129,6 +129,7 @@ export class MariaDb implements Db {
           username,
         ],
       );
+      console.log(current.losses);
     }
     return null;
   }
