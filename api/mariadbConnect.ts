@@ -104,27 +104,27 @@ export class MariaDb implements Db {
     //updates stat record for user in db with a win or loss
 
     if (stats.won == true) {
-      const winratio = (current.wins + 1) / (current.gamesplayed + 1);
+      const winratio = (current.wins + 1) / (current.games_played + 1);
       await this.connection.execute(
         "UPDATE user_stats SET win_ratio = ?, wins = ?, correctness = ?, games_played = ?, lost = ? WHERE username = ?",
         [
           winratio,
           current.wins + 1,
           correctness,
-          current.gamesplayed + 1,
+          current.games_played + 1,
           current.losses,
           username,
         ],
       );
     } else {
-      const winratio = (current.wins) / (current.gamesplayed + 1);
+      const winratio = (current.wins) / (current.games_played + 1);
       await this.connection.execute(
         "UPDATE user_stats SET win_ratio = ?, wins = ?, correctness = ?, games_played = ?, lost = ? WHERE username = ?",
         [
           winratio,
           current.wins,
           correctness,
-          current.gamesplayed + 1,
+          current.games_played + 1,
           current.losses + 1,
           username,
         ],

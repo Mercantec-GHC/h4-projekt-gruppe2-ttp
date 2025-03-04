@@ -8,10 +8,10 @@ export type User = {
 };
 
 export type OutputStats = {
-    winratio: number;
+    win_ratio: number;
     wins: number;
     correctness: number;
-    gamesplayed: number;
+    games_played: number;
     losses: number;
 };
 
