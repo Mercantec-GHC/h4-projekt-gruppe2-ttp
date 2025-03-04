@@ -111,13 +111,13 @@ export class MariaDb implements Db {
           current.wins + 1,
           correctness,
           current.games_played + 1,
-          current.losses,
+          current.lost,
           username,
         ],
       );
     } else {
       const winratio = (current.wins) / (current.games_played + 1);
-      console.log(current.losses);
+      console.log(current.lost);
       await this.connection.execute(
         "UPDATE user_stats SET win_ratio = ?, wins = ?, correctness = ?, games_played = ?, lost = ? WHERE username = ?",
         [
@@ -125,11 +125,11 @@ export class MariaDb implements Db {
           current.wins,
           correctness,
           current.games_played + 1,
-          current.losses + 1,
+          current.lost + 1,
           username,
         ],
       );
-      console.log(current.losses);
+      console.log(current.lost);
     }
     return null;
   }
