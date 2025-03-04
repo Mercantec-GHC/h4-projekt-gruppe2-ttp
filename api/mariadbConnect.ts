@@ -87,14 +87,14 @@ export class MariaDb implements Db {
       if (stats.won == true) {
         await this.connection.execute(
           "INSERT INTO user_stats(username, win_ratio, wins, correctness, games_played, lost) VALUES(?, ?, ?, ?, ?, ?)",
-          [username, 1, 1, correctness, 1, 1, 0],
+          [username, 1, 1, correctness, 1, 0],
         );
       }
       //creates stat record for user in db with a loss
       if (stats.won == false) {
         await this.connection.execute(
-          "INSERT INTO user_stats(win_ratio, wins, correctness, games_played, lost, username) VALUES(?,?,?,?,?,?)",
-          [0, 0, correctness, 1, 1, username],
+          "INSERT INTO user_stats(username, win_ratio, wins, correctness, games_played, lost) VALUES(?,?,?,?,?,?)",
+          [username, 0, 0, correctness, 1, 1],
         );
       }
       return null;
@@ -102,7 +102,7 @@ export class MariaDb implements Db {
     //updates stat record for user in db with a win or loss
 
     if (stats.won == true) {
-      const winratio = current.wins + 1 / current.gamesplayed + 1;
+      const winratio = (current.wins + 1) / (current.gamesplayed + 1);
       await this.connection.execute(
         "UPDATE user_stats SET win_ratio = ?, wins = ?, correctness = ?, games_played = ?, lost = ? WHERE username = ?",
         [
@@ -115,7 +115,7 @@ export class MariaDb implements Db {
         ],
       );
     } else {
-      const winratio = current.wins / current.gamesplayed + 1;
+      const winratio = (current.wins) / (current.gamesplayed + 1);
       await this.connection.execute(
         "UPDATE user_stats SET win_ratio = ?, wins = ?, correctness = ?, games_played = ?, lost = ? WHERE username = ?",
         [
