@@ -74,9 +74,9 @@ export class MariaDb implements Db {
     stats: InputStats,
   ): Promise<null> {
     const current = await this.getUserStats(username);
-    const correctness = stats.totalanswers > 0
-      ? stats.correctanswers / stats.totalanswers
-      : 0;
+    const correctness = stats.correctanswers / stats.totalanswers;
+
+    console.log(correctness);
 
     console.log(stats);
     console.log("----");
