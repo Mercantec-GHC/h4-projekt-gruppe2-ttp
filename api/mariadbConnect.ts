@@ -76,12 +76,16 @@ export class MariaDb implements Db {
     const current = await this.getUserStats(username);
     const correctness = stats.correctanswers / stats.totalanswers;
 
+    console.log(username, stats.won, stats.correctanswers, stats.totalanswers);
+    console.log("----");
+    console.log(current);
+
     if (current == null) {
       //creates stat record for user in db with a win
       if (stats.won == true) {
         await this.connection.execute(
-          "INSERT INTO user_stats(win_ratio, wins, correctness, games_played, lost, username) VALUES(?,?,?,?,?,?)",
-          [1, 1, correctness, 1, 0, username],
+          "INSERT INTO user_stats(username, win_ratio, wins, correctness, games_played, lost) VALUES(?, ?, ?, ?, ?, ?)",
+          [username, 1, 1, correctness, 1, 1, 0],
         );
       }
       //creates stat record for user in db with a loss
