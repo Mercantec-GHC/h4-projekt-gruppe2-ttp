@@ -148,14 +148,15 @@ router.post("/getstats", async (ctx) => {
     return;
   }
 
-  const res = (await getUserStats(await MariaDb.connect(), req.username)).match(
-    (_ok: OutputStats) => {
-      ctx.response.body = { ok: true, message: "Success", stats: res };
-    },
-    (err: string) => {
-      ctx.response.body = { ok: false, message: err };
-    },
-  );
+  const res = (await getUserStats(await MariaDb.connect(), await req.username))
+    .match(
+      (_ok: OutputStats) => {
+        ctx.response.body = { ok: true, message: "Success", stats: res };
+      },
+      (err: string) => {
+        ctx.response.body = { ok: false, message: err };
+      },
+    );
 });
 
 router.post("/savestats/:user", async (ctx) => {
