@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mobile/battle.dart';
 import 'package:mobile/win_overlay.dart';
+import 'package:mobile/trivia_dialogue.dart';
 
 class _Healthbar extends StatelessWidget {
   const _Healthbar({
@@ -250,8 +251,23 @@ class _BattlePageState extends State<BattlePage> with TickerProviderStateMixin {
         builder: (context) => BattleResultPage(victory: playerWon)));
   }
 
-  void _addSoldier() {
-    setState(() => _battle.addPlayerTroop());
+  void _addSoldier() async {
+    final result = await showQuestionDialog(
+        context: context,
+        question: "Whats 1+1",
+        answers: Answers(
+            Answer("2", correct: true),
+            Answer("3", correct: false),
+            Answer("4", correct: false),
+            Answer("1", correct: false)));
+    switch (result) {
+      case AnsweredQuestion(correct: true):
+        setState(() => _battle.addPlayerTroop());
+        break;
+      case AnsweredQuestion(correct: false):
+      case TimeoutReached():
+        break;
+    }
   }
 
   void dangerOverlay() {
