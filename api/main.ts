@@ -26,7 +26,7 @@ interface OutputStats {
   games_played: number;
   correctness: number;
   wins: number;
-  losses: number;
+  lost: number;
 }
 
 async function createUser(
@@ -67,6 +67,7 @@ async function getUserStats(
   db: Db,
   req: string,
 ): Promise<Result<OutputStats, string>> {
+  console.log("1", req);
   const userStats = await db.getUserStats(req);
 
   if (userStats != null) {
@@ -139,7 +140,9 @@ router.post("/login", async (ctx) => {
 });
 
 router.post("/getstats", async (ctx) => {
+  console.log("2", ctx.request);
   const req = await ctx.request.body.json();
+  console.log("3", req);
   if (req == null) {
     ctx.response.body = { ok: false, message: "Missing content" };
     return;
