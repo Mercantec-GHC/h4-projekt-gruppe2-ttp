@@ -76,14 +76,6 @@ export class MariaDb implements Db {
     const current = await this.getUserStats(username);
     const correctness = stats.correctanswers / stats.totalanswers;
 
-    console.log(correctness);
-
-    console.log(stats);
-    console.log("----");
-    console.log(username, stats.won, stats.correctanswers, stats.totalanswers);
-    console.log("----");
-    console.log(current);
-
     if (current == null) {
       //creates stat record for user in db with a win
       if (stats.won == true) {
@@ -102,7 +94,6 @@ export class MariaDb implements Db {
       return null;
     }
     //updates stat record for user in db with a win or loss
-
     if (stats.won == true) {
       const winratio = (current.wins + 1) / (current.games_played + 1);
       await this.connection.execute(
@@ -112,7 +103,7 @@ export class MariaDb implements Db {
           current.wins + 1,
           correctness,
           current.games_played + 1,
-          current.losses,
+          current.lost,
           username,
         ],
       );
@@ -125,7 +116,7 @@ export class MariaDb implements Db {
           current.wins,
           correctness,
           current.games_played + 1,
-          current.losses + 1,
+          current.lost + 1,
           username,
         ],
       );

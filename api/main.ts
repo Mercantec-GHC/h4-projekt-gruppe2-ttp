@@ -22,11 +22,11 @@ interface InputStats {
 }
 
 interface OutputStats {
-  winratio: number;
-  gamesplayed: number;
+  win_ratio: number;
+  games_played: number;
   correctness: number;
   wins: number;
-  losses: number;
+  lost: number;
 }
 
 async function createUser(
@@ -67,6 +67,7 @@ async function getUserStats(
   db: Db,
   req: string,
 ): Promise<Result<OutputStats, string>> {
+  console.log("1", req);
   const userStats = await db.getUserStats(req);
 
   if (userStats != null) {
@@ -139,20 +140,23 @@ router.post("/login", async (ctx) => {
 });
 
 router.post("/getstats", async (ctx) => {
+  console.log("2", ctx.request);
   const req = await ctx.request.body.json();
+  console.log("3", req);
   if (req == null) {
     ctx.response.body = { ok: false, message: "Missing content" };
     return;
   }
 
-  const res = (await getUserStats(await MariaDb.connect(), req)).match(
-    (_ok: OutputStats) => {
-      ctx.response.body = { ok: true, message: "Success", stats: res };
-    },
-    (err: string) => {
-      ctx.response.body = { ok: false, message: err };
-    },
-  );
+  (await getUserStats(await MariaDb.connect(), await req.username))
+    .match(
+      (_ok: OutputStats) => {
+        ctx.response.body = { ok: true, message: "Success", stats: _ok };
+      },
+      (err: string) => {
+        ctx.response.body = { ok: false, message: err };
+      },
+    );
 });
 
 router.post("/savestats/:user", async (ctx) => {
