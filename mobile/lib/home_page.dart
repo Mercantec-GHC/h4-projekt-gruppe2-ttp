@@ -1,84 +1,113 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/battle.dart';
 import 'package:mobile/battle_page.dart';
-import 'package:provider/provider.dart';
+import 'package:mobile/api_frontend/client.dart' as client;
 
-class _HomePage extends StatelessWidget {
+class _HomePage extends StatefulWidget {
   const _HomePage();
 
   @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<_HomePage> {
+  Map<String, dynamic>? _userStats;
+
+  @override
+  void initState() {
+    super.initState();
+    loadUserStats();
+  }
+
+  Future<void> loadUserStats() async {
+    final res = await client.Client().getUserStats(
+        "t"); //remember to replace "t" with username from token (token is not implemented yet)
+    if (res is client.SuccessResult<Map<String, dynamic>>) {
+      setState(() {
+        _userStats = res.data;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        RichText(
-          text: TextSpan(
-            style: DefaultTextStyle.of(context).style,
-            children: const <TextSpan>[
-              TextSpan(text: 'Velkommen, ', style: TextStyle(fontSize: 24.0)),
-              TextSpan(
-                  text: '%username%',
-                  style:
-                      TextStyle(fontWeight: FontWeight.bold, fontSize: 24.0)),
+    return _userStats == null
+        ? Center(child: CircularProgressIndicator())
+        : Column(
+            children: [
+              RichText(
+                text: TextSpan(
+                  style: DefaultTextStyle.of(context).style,
+                  children: <TextSpan>[
+                    TextSpan(
+                        text: 'Velkommen, ', style: TextStyle(fontSize: 24.0)),
+                    TextSpan(
+                        text: '${_userStats?["username"] ?? "Loading..."}',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 24.0)),
+                  ],
+                ),
+              ),
+              Divider(),
+              RichText(
+                text: TextSpan(
+                  style: DefaultTextStyle.of(context).style,
+                  children: <TextSpan>[
+                    TextSpan(
+                        text: 'Gange vundet: ',
+                        style: TextStyle(fontSize: 20.0)),
+                    TextSpan(
+                        text: '${_userStats?["wins"] ?? "Loading..."}',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 20.0)),
+                    TextSpan(text: ' 👑', style: TextStyle(fontSize: 20.0)),
+                  ],
+                ),
+              ),
+              RichText(
+                text: TextSpan(
+                  style: DefaultTextStyle.of(context).style,
+                  children: <TextSpan>[
+                    TextSpan(
+                        text: 'Gange tabt: ', style: TextStyle(fontSize: 20.0)),
+                    TextSpan(
+                        text: '${_userStats?["lost"] ?? "Loading..."}',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 20.0)),
+                    TextSpan(text: ' 😞', style: TextStyle(fontSize: 20.0)),
+                  ],
+                ),
+              ),
+              RichText(
+                text: TextSpan(
+                  style: DefaultTextStyle.of(context).style,
+                  children: <TextSpan>[
+                    TextSpan(
+                        text: 'Spil i alt: ', style: TextStyle(fontSize: 20.0)),
+                    TextSpan(
+                        text: '${_userStats?["games_played"] ?? "Loading..."}',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 20.0)),
+                    TextSpan(text: ' ⚔️', style: TextStyle(fontSize: 20.0)),
+                  ],
+                ),
+              ),
+              RichText(
+                text: TextSpan(
+                  style: DefaultTextStyle.of(context).style,
+                  children: <TextSpan>[
+                    TextSpan(
+                        text: 'Korrekte svar: ',
+                        style: TextStyle(fontSize: 20.0)),
+                    TextSpan(
+                        text: '${_userStats?["correctness"] ?? "Loading..."}%',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 20.0)),
+                    TextSpan(text: ' ✅', style: TextStyle(fontSize: 20.0)),
+                  ],
+                ),
+              ),
             ],
-          ),
-        ),
-        Divider(),
-        RichText(
-          text: TextSpan(
-            style: DefaultTextStyle.of(context).style,
-            children: const <TextSpan>[
-              TextSpan(
-                  text: 'Gange vundet: ', style: TextStyle(fontSize: 20.0)),
-              TextSpan(
-                  text: '42',
-                  style:
-                      TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0)),
-              TextSpan(text: ' 👑🤫🧏‍♂️', style: TextStyle(fontSize: 20.0)),
-            ],
-          ),
-        ),
-        RichText(
-          text: TextSpan(
-            style: DefaultTextStyle.of(context).style,
-            children: const <TextSpan>[
-              TextSpan(text: 'Gange tabt: ', style: TextStyle(fontSize: 20.0)),
-              TextSpan(
-                  text: '99',
-                  style:
-                      TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0)),
-              TextSpan(text: ' 💔🥀😞', style: TextStyle(fontSize: 20.0)),
-            ],
-          ),
-        ),
-        RichText(
-          text: TextSpan(
-            style: DefaultTextStyle.of(context).style,
-            children: const <TextSpan>[
-              TextSpan(text: 'Spil i alt: ', style: TextStyle(fontSize: 20.0)),
-              TextSpan(
-                  text: '141',
-                  style:
-                      TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0)),
-              TextSpan(text: ' 🎖️⚔️💥', style: TextStyle(fontSize: 20.0)),
-            ],
-          ),
-        ),
-        RichText(
-          text: TextSpan(
-            style: DefaultTextStyle.of(context).style,
-            children: const <TextSpan>[
-              TextSpan(
-                  text: 'Korrekte svar: ', style: TextStyle(fontSize: 20.0)),
-              TextSpan(
-                  text: '77%',
-                  style:
-                      TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0)),
-              TextSpan(text: ' 🤓📊✅', style: TextStyle(fontSize: 20.0)),
-            ],
-          ),
-        ),
-      ],
-    );
+          );
   }
 }
 
