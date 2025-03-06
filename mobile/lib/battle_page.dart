@@ -211,6 +211,7 @@ class BattlePage extends StatefulWidget {
 
 class _BattlePageState extends State<BattlePage> with TickerProviderStateMixin {
   late final Timer _battleTimer;
+  bool _battleTimerActive = true;
   final _battle = Battle();
   final List<OverlayEntry> _overlayEntries = [];
   late AnimationController _visualTimerController;
@@ -239,6 +240,9 @@ class _BattlePageState extends State<BattlePage> with TickerProviderStateMixin {
   }
 
   void _battleTick() {
+    if (!_battleTimerActive) {
+      return;
+    }
     final gameOver = _battle.enemy.health <= 0 || _battle.player.health <= 0;
     if (!gameOver) {
       setState(() => _battle.step());
@@ -252,6 +256,7 @@ class _BattlePageState extends State<BattlePage> with TickerProviderStateMixin {
   }
 
   void _addSoldier() async {
+    _battleTimerActive = false;
     final result = await showQuestionDialog(
         context: context,
         question: "Whats 1+1",
@@ -260,6 +265,7 @@ class _BattlePageState extends State<BattlePage> with TickerProviderStateMixin {
             Answer("3", correct: false),
             Answer("4", correct: false),
             Answer("1", correct: false)));
+    _battleTimerActive = true;
     switch (result) {
       case AnsweredQuestion(correct: true):
         setState(() => _battle.addPlayerTroop());
@@ -313,54 +319,56 @@ class _BattlePageState extends State<BattlePage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: _addSoldier,
-                  child: Text("Add player soldier"),
-                ),
-                ...<Widget>[
-                  _Base.fromBase(_battle.enemy, type: UnitType.enemy),
-                  Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 25.0, vertical: 16.0),
-                    child: _TroopList(
-                      troops: _battle.enemyTroops,
-                      type: UnitType.enemy,
-                    ),
-                  ),
-                ],
-                Text("⚔️", style: TextStyle(fontSize: 32.0)),
-                ...<Widget>[
-                  Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 25.0, vertical: 16.0),
-                    child: _TroopList(
-                      troops: _battle.playerTroops,
-                      type: UnitType.player,
-                    ),
-                  ),
-                  _Base.fromBase(_battle.player, type: UnitType.player),
-                ],
-              ],
-            ),
-          ),
-          Align(
-            alignment: Alignment.topLeft,
-            child: Padding(
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Padding(
               padding: EdgeInsets.all(16.0),
-              child: CircularProgressIndicator(
-                value: _visualTimerController.value,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  ...<Widget>[
+                    _Base.fromBase(_battle.enemy, type: UnitType.enemy),
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 25.0, vertical: 16.0),
+                      child: _TroopList(
+                        troops: _battle.enemyTroops,
+                        type: UnitType.enemy,
+                      ),
+                    ),
+                  ],
+                  Text("⚔️", style: TextStyle(fontSize: 32.0)),
+                  ...<Widget>[
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 25.0, vertical: 16.0),
+                      child: _TroopList(
+                        troops: _battle.playerTroops,
+                        type: UnitType.player,
+                      ),
+                    ),
+                    _Base.fromBase(_battle.player, type: UnitType.player),
+                    ElevatedButton(
+                      onPressed: _addSoldier,
+                      child: Text("Add player soldier"),
+                    ),
+                  ],
+                ],
               ),
             ),
-          )
-        ],
+            Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: CircularProgressIndicator(
+                  value: _visualTimerController.value,
+                ),
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
