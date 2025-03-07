@@ -33,6 +33,22 @@ class Client {
       return ErrorResult(message: resData["message"]);
     }
   }
+
+  Future<ClientResult<Map<String, dynamic>>> getUserStats(
+      String username) async {
+    final body = json.encode({"username": username});
+
+    var res = await http.post(Uri.parse("$apiUrl/getstats"),
+        headers: {"Content-Type": "application/json"}, body: body);
+
+    var resData = await json.decode(res.body);
+
+    if (resData["ok"]) {
+      return SuccessResult(data: resData["stats"]);
+    } else {
+      return ErrorResult(message: resData["message"]);
+    }
+  }
 }
 
 sealed class ClientResult<Data> {
