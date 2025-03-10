@@ -19,7 +19,7 @@ fn main() -> io::Result<()> {
     let mut num: i32 = 0;
     let args: Vec<String> = env::args().collect();
     let mut file = File::create("trivia_questions.json")?;
-    let questionamount: i32 = args[3].parse::<i32>().unwrap();
+    let questionamount: i32 = args[1].parse::<i32>().unwrap();
 
     file.write(b"[")?;
 
