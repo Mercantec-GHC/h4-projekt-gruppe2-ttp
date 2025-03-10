@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile/battle.dart';
 import 'package:mobile/win_overlay.dart';
 import 'package:mobile/trivia_dialogue.dart';
+import 'package:mobile/api_frontend/client.dart';
 
 class _Healthbar extends StatelessWidget {
   const _Healthbar({
@@ -239,6 +240,20 @@ class _BattlePageState extends State<BattlePage> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  void _sendStats(bool winCheck) async {
+    var correctAnswers = 0;
+    for (var answer in answers) {
+      if (answer) {
+        correctAnswers++;
+      }
+    }
+
+    final totalAnswers = answers.length;
+
+    await Client().saveGame("t", winCheck, correctAnswers,
+        totalAnswers); //remember to replace "t" with username from token (token is not implemented yet)
+  }
+
   void _battleTick() {
     if (!_battleTimerActive) {
       return;
@@ -251,8 +266,18 @@ class _BattlePageState extends State<BattlePage> with TickerProviderStateMixin {
       return;
     }
     final playerWon = _battle.enemy.health <= 0;
+    if (playerWon) {
+      _sendStats(true);
+    } else {
+      _sendStats(false);
+    }
     Navigator.of(context).pushReplacement(MaterialPageRoute(
         builder: (context) => BattleResultPage(victory: playerWon)));
+  }
+
+  List<bool> answers = [];
+  void saveAnswers(AnsweredQuestion result) {
+    answers.add(result.correct);
   }
 
   void _addSoldier() async {
@@ -266,6 +291,7 @@ class _BattlePageState extends State<BattlePage> with TickerProviderStateMixin {
             Answer("4", correct: false),
             Answer("1", correct: false)));
     _battleTimerActive = true;
+    saveAnswers(result as AnsweredQuestion);
     switch (result) {
       case AnsweredQuestion(correct: true):
         setState(() => _battle.addPlayerTroop());

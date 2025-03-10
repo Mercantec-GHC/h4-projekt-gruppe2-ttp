@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'package:http/http.dart' as http;
 
 class Client {
@@ -45,6 +46,29 @@ class Client {
 
     if (resData["ok"]) {
       return SuccessResult(data: resData["stats"]);
+    } else {
+      return ErrorResult(message: resData["message"]);
+    }
+  }
+
+  Future<ClientResult<Null>> saveGame(
+      String username, bool won, int correctanswers, int totalanswers) async {
+    final body = json.encode({
+      "username": username,
+      "won": won,
+      "correctanswers": correctanswers,
+      "totalanswers": totalanswers
+    });
+
+    var res = await http.post(Uri.parse("$apiUrl/savestats/$username"),
+        headers: {"Content-Type": "application/json"}, body: body);
+
+    var resData = json.decode(res.body);
+
+    log(resData);
+
+    if (resData["ok"]) {
+      return SuccessResult(data: null);
     } else {
       return ErrorResult(message: resData["message"]);
     }
