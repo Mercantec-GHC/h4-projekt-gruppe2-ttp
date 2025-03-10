@@ -80,6 +80,10 @@ export class MariaDb implements Db {
       correctness = 0;
     }
 
+    if (current != null) {
+      correctness = current.correctness + correctness;
+    }
+
     if (current == null) {
       //creates stat record for user in db with a win
       if (stats.won == true) {

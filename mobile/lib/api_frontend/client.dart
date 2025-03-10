@@ -65,8 +65,6 @@ class Client {
 
     var resData = json.decode(res.body);
 
-    log(resData);
-
     if (resData["ok"]) {
       return SuccessResult(data: null);
     } else {
