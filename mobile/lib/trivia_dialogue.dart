@@ -4,11 +4,44 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
+class Trivia {
+  final String category;
+  final String question;
+  final Answers answers;
+
+  const Trivia(
+      {required this.question, required this.category, required this.answers});
+
+  Trivia.fromJson(Map<String, dynamic> obj)
+      : category = obj["category"],
+        question = obj["question"],
+        answers = Answers.fromJson(obj["answers"]);
+}
+
+class Answers {
+  final Answer topLeft;
+  final Answer topRight;
+  final Answer bottomLeft;
+  final Answer bottomRight;
+
+  const Answers(this.topLeft, this.topRight, this.bottomLeft, this.bottomRight);
+
+  Answers.fromJson(List<dynamic> obj)
+      : topLeft = Answer.fromJson(obj[0]),
+        topRight = Answer.fromJson(obj[1]),
+        bottomLeft = Answer.fromJson(obj[2]),
+        bottomRight = Answer.fromJson(obj[3]);
+}
+
 class Answer {
   final String text;
   final bool correct;
 
   const Answer(this.text, {required this.correct});
+
+  Answer.fromJson(Map<String, dynamic> obj)
+      : text = obj["text"],
+        correct = obj["correct"];
 }
 
 sealed class QuestionResult {}
@@ -19,27 +52,16 @@ class AnsweredQuestion extends QuestionResult {
   AnsweredQuestion(this.correct);
 }
 
-class Answers {
-  final Answer topLeft;
-  final Answer topRight;
-  final Answer bottomLeft;
-  final Answer bottomRight;
-
-  Answers(this.topLeft, this.topRight, this.bottomLeft, this.bottomRight);
-}
-
 class TimeoutReached extends QuestionResult {}
 
 Future<QuestionResult> showQuestionDialog(
-    {required BuildContext context,
-    required String question,
-    required Answers answers}) async {
+    {required BuildContext context, required Trivia trivia}) async {
   final value = await Navigator.push<QuestionResult>(
     context,
     MaterialPageRoute(
       builder: (context) => _QuestionDialog(
-        question: question,
-        answers: answers,
+        question: trivia.question,
+        answers: trivia.answers,
       ),
     ),
   );
@@ -310,3 +332,4 @@ class _AnswersScreen extends StatelessWidget {
     );
   }
 }
+

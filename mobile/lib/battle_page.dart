@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:mobile/battle.dart';
@@ -204,7 +205,9 @@ class _TroopList extends StatelessWidget {
 }
 
 class BattlePage extends StatefulWidget {
-  const BattlePage({super.key});
+  final List<Trivia> trivia;
+
+  const BattlePage({super.key, required this.trivia});
 
   @override
   State<BattlePage> createState() => _BattlePageState();
@@ -216,6 +219,7 @@ class _BattlePageState extends State<BattlePage> with TickerProviderStateMixin {
   final _battle = Battle();
   final List<OverlayEntry> _overlayEntries = [];
   late AnimationController _visualTimerController;
+  final List<bool> answers = [];
 
   @override
   void initState() {
@@ -241,13 +245,7 @@ class _BattlePageState extends State<BattlePage> with TickerProviderStateMixin {
   }
 
   void _sendStats(bool winCheck) async {
-    var correctAnswers = 0;
-    for (var answer in answers) {
-      if (answer) {
-        correctAnswers++;
-      }
-    }
-
+    final correctAnswers = answers.where((correct) => correct).length;
     final totalAnswers = answers.length;
 
     await Client().saveGame("t", winCheck, correctAnswers,
@@ -275,23 +273,24 @@ class _BattlePageState extends State<BattlePage> with TickerProviderStateMixin {
         builder: (context) => BattleResultPage(victory: playerWon)));
   }
 
-  List<bool> answers = [];
-  void saveAnswers(AnsweredQuestion result) {
+  void saveAnswer(AnsweredQuestion result) {
     answers.add(result.correct);
   }
 
   void _addSoldier() async {
+    Trivia randomTrivia() {
+      return widget.trivia[Random().nextInt(widget.trivia.length)];
+    }
+
     _battleTimerActive = false;
-    final result = await showQuestionDialog(
-        context: context,
-        question: "Whats 1+1",
-        answers: Answers(
-            Answer("2", correct: true),
-            Answer("3", correct: false),
-            Answer("4", correct: false),
-            Answer("1", correct: false)));
+    final result =
+        await showQuestionDialog(context: context, trivia: randomTrivia());
     _battleTimerActive = true;
-    saveAnswers(result as AnsweredQuestion);
+
+    if (result is AnsweredQuestion) {
+      saveAnswer(result);
+    }
+
     switch (result) {
       case AnsweredQuestion(correct: true):
         setState(() => _battle.addPlayerTroop());

@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mobile/battle_page.dart';
 import 'package:mobile/api_frontend/client.dart' as client;
+import 'package:mobile/trivia_dialogue.dart';
 
 class _HomePage extends StatefulWidget {
   const _HomePage();
@@ -41,7 +45,7 @@ class _HomePageState extends State<_HomePage> {
                     TextSpan(
                         text: 'Velkommen, ', style: TextStyle(fontSize: 24.0)),
                     TextSpan(
-                        text: '${_userStats?["username"] ?? "Loading..."}',
+                        text: '${_userStats?["username"]}',
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 24.0)),
                   ],
@@ -56,7 +60,7 @@ class _HomePageState extends State<_HomePage> {
                         text: 'Gange vundet: ',
                         style: TextStyle(fontSize: 20.0)),
                     TextSpan(
-                        text: '${_userStats?["wins"] ?? "Loading..."}',
+                        text: '${_userStats?["wins"]}',
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 20.0)),
                     TextSpan(text: ' 👑', style: TextStyle(fontSize: 20.0)),
@@ -70,7 +74,7 @@ class _HomePageState extends State<_HomePage> {
                     TextSpan(
                         text: 'Gange tabt: ', style: TextStyle(fontSize: 20.0)),
                     TextSpan(
-                        text: '${_userStats?["lost"] ?? "Loading..."}',
+                        text: '${_userStats?["lost"]}',
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 20.0)),
                     TextSpan(text: ' 😞', style: TextStyle(fontSize: 20.0)),
@@ -84,7 +88,7 @@ class _HomePageState extends State<_HomePage> {
                     TextSpan(
                         text: 'Spil i alt: ', style: TextStyle(fontSize: 20.0)),
                     TextSpan(
-                        text: '${_userStats?["games_played"] ?? "Loading..."}',
+                        text: '${_userStats?["games_played"]}',
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 20.0)),
                     TextSpan(text: ' ⚔️', style: TextStyle(fontSize: 20.0)),
@@ -99,7 +103,7 @@ class _HomePageState extends State<_HomePage> {
                         text: 'Korrekte svar: ',
                         style: TextStyle(fontSize: 20.0)),
                     TextSpan(
-                        text: '${_userStats?["correctness"] ?? "Loading..."}%',
+                        text: '${_userStats?["correctness"]}%',
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 20.0)),
                     TextSpan(text: ' ✅', style: TextStyle(fontSize: 20.0)),
@@ -122,11 +126,25 @@ class _BattlePage extends StatelessWidget {
         Text("Klar til kamp?", style: TextStyle(fontSize: 24.0)),
         SizedBox(height: 16.0),
         FilledButton(
-          onPressed: () => Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (builder) => BattlePage(),
-            ),
-          ),
+          onPressed: () async {
+            final trivia = await rootBundle
+                .loadString("assets/trivia_questions.json")
+                .then((content) => jsonDecode(content) as List<dynamic>)
+                .then((questions) => questions
+                    .map((trivia) => Trivia.fromJson(trivia))
+                    .toList());
+
+            if (!context.mounted) {
+              return;
+            }
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (builder) => BattlePage(
+                  trivia: trivia,
+                ),
+              ),
+            );
+          },
           child: Padding(
             padding: EdgeInsets.all(16.0),
             child: Text(
