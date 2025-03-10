@@ -76,6 +76,8 @@ export class MariaDb implements Db {
     const current = await this.getUserStats(username);
     const correctness = stats.correctanswers / stats.totalanswers;
 
+    console.log(correctness);
+
     if (current == null) {
       //creates stat record for user in db with a win
       if (stats.won == true) {
