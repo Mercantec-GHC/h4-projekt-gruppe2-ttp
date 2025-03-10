@@ -21,7 +21,7 @@ impl Answer {
 impl ToJson for Answer {
     fn to_json(&self) -> String {
         format!(
-            r#"{{ "correct": {}, content: "{}" }}"#,
+            r#"{{ "correct": {}, "content": "{}" }}"#,
             self.correct, self.content
         )
     }
