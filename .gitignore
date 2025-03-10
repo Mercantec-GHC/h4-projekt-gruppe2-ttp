@@ -4,3 +4,4 @@
 /API/bin
 .vscode
 /tools/target
+/tools/trivia_questions.json
