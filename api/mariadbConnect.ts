@@ -74,9 +74,11 @@ export class MariaDb implements Db {
     stats: InputStats,
   ): Promise<null> {
     const current = await this.getUserStats(username);
-    const correctness = stats.correctanswers / stats.totalanswers;
+    let correctness = stats.correctanswers / stats.totalanswers;
 
-    console.log(correctness);
+    if (Number.isNaN(correctness)) {
+      correctness = 0;
+    }
 
     if (current == null) {
       //creates stat record for user in db with a win
