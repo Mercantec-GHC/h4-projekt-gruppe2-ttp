@@ -9,20 +9,20 @@ mod to_json;
 
 struct Answer {
     correct: bool,
-    content: String,
+    text: String,
 }
 
 impl Answer {
-    fn new(correct: bool, content: String) -> Self {
-        Self { correct, content }
+    fn new(correct: bool, text: String) -> Self {
+        Self { correct, text }
     }
 }
 
 impl ToJson for Answer {
     fn to_json(&self) -> String {
         format!(
-            r#"{{ "correct": {}, "content": "{}" }}"#,
-            self.correct, self.content
+            r#"{{ "correct": {}, "text": "{}" }}"#,
+            self.correct, self.text
         )
     }
 }
