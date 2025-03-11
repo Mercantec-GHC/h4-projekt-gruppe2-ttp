@@ -130,6 +130,7 @@ router.post("/login", async (ctx) => {
       await ctx.cookies.set("token", token.value, {
         httpOnly: true,
         secure: false,
+        overwrite: true,
       });
       ctx.response.body = {
         ok: true,
