@@ -131,6 +131,7 @@ router.post("/login", async (ctx) => {
         httpOnly: true,
         secure: false,
         overwrite: true,
+        signed: false,
       });
       ctx.response.body = {
         ok: true,
