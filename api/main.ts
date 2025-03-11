@@ -126,7 +126,7 @@ router.post("/login", async (ctx) => {
 
   (await login(await MariaDb.connect(), req)).match(
     (token) => {
-      ctx.cookies.set("token", token.value, { httpOnly: true });
+      ctx.cookies.set("token", token.value, { httpOnly: true, secure: false });
       ctx.response.body = {
         ok: true,
         message: "Success",
