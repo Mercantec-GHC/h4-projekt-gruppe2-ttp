@@ -126,12 +126,12 @@ router.post("/login", async (ctx) => {
 
   (await login(await MariaDb.connect(), req)).match(
     (token) => {
+      ctx.cookies.set("token", token.value, { httpOnly: true });
       ctx.response.body = {
         ok: true,
         message: "Success",
         token: token.value,
       };
-      ctx.cookies.set("token", token.value, { httpOnly: true });
     },
     (err) => {
       ctx.response.body = { ok: false, message: err };
