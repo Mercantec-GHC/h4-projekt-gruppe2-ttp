@@ -165,8 +165,8 @@ router.post("/getstats", async (ctx) => {
 });
 
 router.post("/savestats/:user", async (ctx) => {
-  const cookie = ctx.cookies.get("token");
-  console.log(await cookie);
+  const cookie = await ctx.cookies.get("token");
+  console.log(cookie);
 
   const user = ctx.params.user;
   const req = await ctx.request.body.json();
