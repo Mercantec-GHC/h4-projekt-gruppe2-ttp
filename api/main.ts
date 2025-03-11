@@ -4,6 +4,7 @@ import { Db, Token, token } from "./db.ts";
 import { MariaDb } from "./mariadbConnect.ts";
 import { err, ok, Result } from "jsr:@result/result";
 import { HashedPassword } from "./hashed_password.ts";
+import { promiseHooks } from "node:v8";
 
 interface RegisterRequest {
   username: string;
@@ -125,15 +126,19 @@ router.post("/login", async (ctx) => {
   }
 
   (await login(await MariaDb.connect(), req)).match(
-    (token) => {
-      ctx.cookies.set("token", token.value, { httpOnly: true, secure: false });
+    async (token) => {
+      await ctx.cookies.set("token", token.value, {
+        httpOnly: true,
+        secure: false,
+      });
       ctx.response.body = {
         ok: true,
         message: "Success",
         token: token.value,
       };
     },
-    (err) => {
+    async (err) => {
+      await Promise.resolve();
       ctx.response.body = { ok: false, message: err };
     },
   );
