@@ -131,6 +131,7 @@ router.post("/login", async (ctx) => {
         message: "Success",
         token: token.value,
       };
+      ctx.cookies.set("token", token.value);
     },
     (err) => {
       ctx.response.body = { ok: false, message: err };
