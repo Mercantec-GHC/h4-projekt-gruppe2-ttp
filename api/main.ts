@@ -188,7 +188,7 @@ router.post("/savestats/:user", async (ctx) => {
 });
 
 const app = new oak.Application();
-app.use(oakCors({ credentials: true, origin: "http://localhost:8000/" }));
+app.use(oakCors({ credentials: true, origin: "http://localhost:8000" }));
 app.use(router.routes());
 app.use(router.allowedMethods());
 app.use(async (ctx, next) => {
