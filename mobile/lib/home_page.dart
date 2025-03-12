@@ -2,9 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mobile/battle_page.dart';
-import 'package:mobile/api_frontend/client.dart' as client;
-import 'package:mobile/trivia_dialogue.dart';
+import 'package:mobile/battle/page.dart';
+import 'package:mobile/battle/trivia_dialog.dart';
+import 'package:mobile/client.dart' as client;
 
 class _HomePage extends StatefulWidget {
   const _HomePage();
@@ -139,10 +139,7 @@ class _BattlePage extends StatelessWidget {
             }
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
-                builder: (builder) => BattlePage(
-                  trivia: trivia,
-                ),
-              ),
+                  builder: (builder) => BattlePage(trivia: trivia)),
             );
           },
           child: Padding(

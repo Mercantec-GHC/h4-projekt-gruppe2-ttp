@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:mobile/battle.dart';
-import 'package:mobile/win_overlay.dart';
-import 'package:mobile/trivia_dialogue.dart';
-import 'package:mobile/api_frontend/client.dart';
+import 'package:mobile/battle/logic.dart';
+import 'package:mobile/battle/result_page.dart';
+import 'package:mobile/battle/trivia_dialog.dart';
+import 'package:mobile/client.dart';
 
 class _Healthbar extends StatelessWidget {
   const _Healthbar({
@@ -284,7 +284,7 @@ class _BattlePageState extends State<BattlePage> with TickerProviderStateMixin {
 
     _battleTimerActive = false;
     final result =
-        await showQuestionDialog(context: context, trivia: randomTrivia());
+        await showTriviaDialog(context: context, trivia: randomTrivia());
     _battleTimerActive = true;
 
     if (result is AnsweredQuestion) {

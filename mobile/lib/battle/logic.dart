@@ -1,7 +1,7 @@
 import 'dart:collection';
 import 'dart:math';
 
-import 'package:mobile/battle_naming.dart';
+import 'package:mobile/battle/naming.dart';
 
 int _randomInt({required int min, required int max}) {
   final random = Random();
@@ -116,11 +116,6 @@ class Battle {
   }
 
   void step() {
-    /// step logic:
-    /// 1. remove any dead troops
-    /// 2. roll a dice to decide whether to add an enemy troop
-    /// 3. apply damage to first soldier or base in line
-    /// this leaves a dead soldier for 1 iteration, this is currently on purpose, so you can tell a soldier has died
     _cullDeadTroops();
     _addEnemyTroop();
     _applyPlayerAttack();

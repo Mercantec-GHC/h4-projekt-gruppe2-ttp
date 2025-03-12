@@ -1,8 +1,8 @@
 import 'dart:async';
-
+import 'package:flutter/services.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:sensors_plus/sensors_plus.dart';
 
 class Trivia {
   final String category;
@@ -44,41 +44,41 @@ class Answer {
         correct = obj["correct"];
 }
 
-sealed class QuestionResult {}
+sealed class TriviaResult {}
 
-class AnsweredQuestion extends QuestionResult {
+class AnsweredQuestion extends TriviaResult {
   bool correct;
 
   AnsweredQuestion(this.correct);
 }
 
-class TimeoutReached extends QuestionResult {}
+class TimeoutReached extends TriviaResult {}
 
-Future<QuestionResult> showQuestionDialog(
+Future<TriviaResult> showTriviaDialog(
     {required BuildContext context, required Trivia trivia}) async {
-  final value = await Navigator.push<QuestionResult>(
+  final value = await Navigator.push<TriviaResult>(
     context,
     MaterialPageRoute(
-      builder: (context) => _QuestionDialog(
+      builder: (context) => _TriviaDialog(
         question: trivia.question,
         answers: trivia.answers,
       ),
     ),
   );
-  if (value is! QuestionResult) {
+  if (value is! TriviaResult) {
     return TimeoutReached();
   }
   return value;
 }
 
-class _QuestionDialog extends StatefulWidget {
-  const _QuestionDialog({required this.question, required this.answers});
+class _TriviaDialog extends StatefulWidget {
+  const _TriviaDialog({required this.question, required this.answers});
 
   final String question;
   final Answers answers;
 
   @override
-  State<_QuestionDialog> createState() => _QuestionDialogState();
+  State<_TriviaDialog> createState() => _TriviaDialogState();
 }
 
 class _Pointer extends StatelessWidget {
@@ -144,19 +144,21 @@ class _Answer extends StatelessWidget {
   }
 }
 
-class Vec2d {
+class _Vec2d {
   final double x;
   final double y;
 
-  Vec2d({required this.x, required this.y});
-  Vec2d.zero()
+  _Vec2d({required this.x, required this.y});
+  _Vec2d.zero()
       : x = 0,
         y = 0;
 }
 
-class _QuestionDialogState extends State<_QuestionDialog> {
-  Vec2d ptr = Vec2d.zero();
-  Vec2d rotation = Vec2d.zero();
+typedef WithinBounds = bool Function(double x, double y);
+
+class _TriviaDialogState extends State<_TriviaDialog> {
+  _Vec2d ptr = _Vec2d.zero();
+  _Vec2d target = _Vec2d.zero();
   int secondsLeftToAnswer = 90;
 
   late final Timer _answerTimer;
@@ -167,7 +169,7 @@ class _QuestionDialogState extends State<_QuestionDialog> {
   void initState() {
     _gyroscopeSubscription = gyroscopeEventStream().listen(
       (GyroscopeEvent event) {
-        rotation = Vec2d(x: rotation.x + event.y, y: rotation.y + event.x);
+        target = _Vec2d(x: target.x + event.y, y: target.y + event.x);
       },
       onError: (error) {},
       cancelOnError: true,
@@ -187,15 +189,19 @@ class _QuestionDialogState extends State<_QuestionDialog> {
     super.initState();
   }
 
+  void _pointerMoveFallback(PointerHoverEvent event) {
+    target = _Vec2d(x: event.position.dx, y: event.position.dy);
+  }
+
   double _lerpDouble(double pos, double tgt, double alpha) {
     return (tgt - pos) * alpha + pos;
   }
 
   void _lerpPtr() {
     setState(() {
-      ptr = Vec2d(
-        x: _lerpDouble(ptr.x, rotation.x, 0.1),
-        y: _lerpDouble(ptr.y, rotation.y, 0.1),
+      ptr = _Vec2d(
+        x: _lerpDouble(ptr.x, target.x, 0.1),
+        y: _lerpDouble(ptr.y, target.y, 0.1),
       );
     });
   }
@@ -209,18 +215,23 @@ class _QuestionDialogState extends State<_QuestionDialog> {
   }
 
   bool _isAnswerCorrect() {
-    bool correct;
-    if (ptr.x <= 0 && ptr.y <= 0) {
-      correct = widget.answers.topLeft.correct;
-    } else if (ptr.x <= 0 && ptr.y > 0) {
-      correct = widget.answers.bottomLeft.correct;
-    } else if (ptr.x > 0 && ptr.y <= 0) {
-      correct = widget.answers.topRight.correct;
-    } else if (ptr.x > 0 && ptr.y > 0) {
-      correct = widget.answers.bottomRight.correct;
-    } else {
-      throw Exception("unreachable");
-    }
+    final Answers(
+      topLeft: topLeft,
+      topRight: topRight,
+      bottomLeft: bottomLeft,
+      bottomRight: bottomRight
+    ) = widget.answers;
+
+    final answers = <({bool correct, WithinBounds withinBounds})>[
+      (correct: topLeft.correct, withinBounds: (x, y) => x <= 0 && y <= 0),
+      (correct: topRight.correct, withinBounds: (x, y) => x > 0 && y <= 0),
+      (correct: bottomLeft.correct, withinBounds: (x, y) => x <= 0 && y > 0),
+      (correct: bottomRight.correct, withinBounds: (x, y) => x > 0 && y > 0),
+    ];
+
+    final (:correct, withinBounds: _) =
+        answers.singleWhere((v) => v.withinBounds(ptr.x, ptr.y));
+
     return correct;
   }
 
@@ -240,24 +251,27 @@ class _QuestionDialogState extends State<_QuestionDialog> {
       onTap: () => _lockAnswerIn(),
       child: Scaffold(
         body: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  "${widget.question} ($secondsLeftToAnswer)",
-                  style: TextStyle(fontSize: 24.0),
+          child: Listener(
+            onPointerHover: _pointerMoveFallback,
+            child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    "${widget.question} ($secondsLeftToAnswer)",
+                    style: TextStyle(fontSize: 24.0),
+                  ),
                 ),
-              ),
-              _AnswersScreen(answers: widget.answers, ptr: ptr),
-              Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  "Tap to lock answer in",
-                  style: TextStyle(fontSize: 20.0),
+                _AnswersScreen(answers: widget.answers, ptr: ptr),
+                Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    "Tap to lock answer in",
+                    style: TextStyle(fontSize: 20.0),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -273,7 +287,7 @@ class _AnswersScreen extends StatelessWidget {
 
   final double spacing = 32;
   final Answers answers;
-  final Vec2d ptr;
+  final _Vec2d ptr;
 
   Widget _answerColumn({
     required Answer top,
@@ -332,4 +346,3 @@ class _AnswersScreen extends StatelessWidget {
     );
   }
 }
-

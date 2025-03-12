@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/api_frontend/client.dart';
+import 'package:mobile/client.dart';
 import 'package:mobile/home_page.dart';
 import 'package:mobile/logo.dart';
 import 'package:mobile/register_page.dart';
-import 'package:mobile/win_overlay.dart';
 
 sealed class _LoginPageStatus {}
 
@@ -50,11 +49,6 @@ class _LoginPageState extends State<LoginPage> {
   _bypassLogin() {
     Navigator.of(context)
         .pushReplacement(MaterialPageRoute(builder: (_) => HomeNavigation()));
-  }
-
-  _gotoBattleResult(bool victory) {
-    Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => BattleResultPage(victory: victory)));
   }
 
   @override
@@ -131,14 +125,6 @@ class _LoginPageState extends State<LoginPage> {
               OutlinedButton(
                 onPressed: _bypassLogin,
                 child: Text("bypass login 😈🙏"),
-              ),
-              OutlinedButton(
-                onPressed: () => _gotoBattleResult(true),
-                child: Text("winner winner chicken dinner"),
-              ),
-              OutlinedButton(
-                onPressed: () => _gotoBattleResult(false),
-                child: Text("taberskærm"),
               ),
             ]),
           ),

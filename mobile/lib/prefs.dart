@@ -5,10 +5,8 @@ class SharedPrefs implements Prefs {
 
   const SharedPrefs(this.inner);
 
-  @override
-  Future<Prefs> getPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    return SharedPrefs(prefs);
+  static Future<Prefs> loadPrefs() async {
+    return SharedPrefs(await SharedPreferences.getInstance());
   }
 
   @override
@@ -23,7 +21,6 @@ class SharedPrefs implements Prefs {
 }
 
 abstract class Prefs {
-  Future<Prefs> getPrefs();
   void setCookie(String token);
   Future<String?> getCookie();
 }

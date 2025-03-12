@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/login_page.dart';
+import 'package:mobile/prefs.dart';
 
-void main() {
-  runApp(App());
+void main() async {
+  final prefs = await SharedPrefs.loadPrefs();
+  runApp(App(prefs: prefs));
 }
 
 class App extends StatelessWidget {
-  const App({super.key});
+  final Prefs prefs;
+
+  const App({super.key, required this.prefs});
 
   @override
   Widget build(BuildContext context) {
