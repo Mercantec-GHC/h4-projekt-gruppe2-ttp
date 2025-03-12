@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'package:http/http.dart' as http;
 
 class Client {
@@ -10,7 +9,6 @@ class Client {
 
     var res = await http.post(Uri.parse("$apiUrl/login"),
         headers: {"Content-Type": "application/json"}, body: body);
-
     var resData = json.decode(res.body);
 
     if (resData["ok"]) {
