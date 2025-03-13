@@ -1,5 +1,5 @@
 import * as oak from "jsr:@oak/oak";
-import { oakCors } from "https://deno.land/x/cors/mod.ts";
+import { oakCors } from "https://deno.land/x/cors@v1.2.2/mod.ts";
 import { Db, Token, token } from "./db.ts";
 import { MariaDb } from "./mariadbConnect.ts";
 import { err, ok, Result } from "jsr:@result/result";
@@ -30,13 +30,12 @@ interface InputStats {
   total_answers: number;
 }
 
-interface OutputStats {
-  win_ratio: number;
-  games_played: number;
-  correctness: number;
+type OutputStats = {
+  correct_answers: number;
+  total_answers: number;
   wins: number;
-  lost: number;
-}
+  games_played: number;
+};
 
 async function createUser(
   db: Db,
