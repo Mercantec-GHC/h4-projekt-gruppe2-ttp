@@ -13,6 +13,31 @@ Future<List<Trivia>> loadTrivia() async {
           questions.map((trivia) => Trivia.fromJson(trivia)).toList());
 }
 
+double _lerpDouble(double pos, double tgt, double alpha) {
+  return (tgt - pos) * alpha + pos;
+}
+
+bool _isAnswerCorrect(Answers answer, _RelPtr ptr) {
+  final Answers(
+    topLeft: topLeft,
+    topRight: topRight,
+    bottomLeft: bottomLeft,
+    bottomRight: bottomRight
+  ) = answer;
+
+  final answerFunctors = <({bool correct, WithinBounds withinBounds})>[
+    (correct: topLeft.correct, withinBounds: (x, y) => x <= 0 && y <= 0),
+    (correct: topRight.correct, withinBounds: (x, y) => x > 0 && y <= 0),
+    (correct: bottomLeft.correct, withinBounds: (x, y) => x <= 0 && y > 0),
+    (correct: bottomRight.correct, withinBounds: (x, y) => x > 0 && y > 0),
+  ];
+
+  final (:correct, withinBounds: _) =
+      answerFunctors.singleWhere((v) => v.withinBounds(ptr.x, ptr.y));
+
+  return correct;
+}
+
 class Trivia {
   final String category;
   final String question;
@@ -91,9 +116,9 @@ class _TriviaDialog extends StatefulWidget {
 }
 
 class _Pointer extends StatelessWidget {
-  final double x;
-  final double y;
-  const _Pointer({required this.x, required this.y});
+  final _RelPtr ptr;
+  final Size size;
+  const _Pointer({required this.ptr, required this.size});
 
   double _size(double value, double max) {
     return clampDouble(value, -0.95, 0.95) * max * 0.5;
@@ -103,21 +128,19 @@ class _Pointer extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
 
-    return LayoutBuilder(
-      builder: (_, constraints) => Center(
-        child: Container(
-          transform: Matrix4.translationValues(
-            _size(x, constraints.maxWidth),
-            _size(y, constraints.maxHeight),
-            0,
-          ),
-          width: 16,
-          height: 16,
-          decoration: BoxDecoration(
-            color: colorScheme.primary,
-            shape: BoxShape.circle,
-            border: Border.all(color: colorScheme.onPrimary, width: 2.0),
-          ),
+    return Center(
+      child: Container(
+        transform: Matrix4.translationValues(
+          _size(ptr.x, size.width),
+          _size(ptr.y, size.height),
+          0,
+        ),
+        width: 16,
+        height: 16,
+        decoration: BoxDecoration(
+          color: colorScheme.primary,
+          shape: BoxShape.circle,
+          border: Border.all(color: colorScheme.onPrimary, width: 2.0),
         ),
       ),
     );
@@ -153,37 +176,116 @@ class _Answer extends StatelessWidget {
   }
 }
 
-class _Vec2d {
+class _RelPtr {
   final double x;
   final double y;
 
-  _Vec2d({required this.x, required this.y});
-  _Vec2d.zero()
+  _RelPtr({required this.x, required this.y});
+  _RelPtr.zero()
       : x = 0,
         y = 0;
+  _RelPtr.fromAbs({required double x, required double y, required Size size})
+      : x = (x - size.width * 0.5) * 2,
+        y = (y - size.height * 0.5) * 2;
 }
 
 typedef WithinBounds = bool Function(double x, double y);
 
-class _TriviaDialogState extends State<_TriviaDialog> {
-  _Vec2d ptr = _Vec2d.zero();
-  _Vec2d target = _Vec2d.zero();
-  int secondsLeftToAnswer = 90;
+class _IDEKANYMORE extends StatefulWidget {
+  final Answers answers;
 
-  late final Timer _answerTimer;
+  const _IDEKANYMORE({required this.answers});
+
+  @override
+  State<StatefulWidget> createState() => _IDEKANYMORESTATE();
+}
+
+class _IDEKANYMORESTATE extends State<_IDEKANYMORE> {
+  _RelPtr ptr = _RelPtr.zero();
+  _RelPtr target = _RelPtr.zero();
+  Size size = Size.zero;
+
   late final Timer _lerpTimer;
   late final StreamSubscription _gyroscopeSubscription;
 
   @override
   void initState() {
+    _lerpTimer = Timer.periodic(Duration(milliseconds: 33), (_) => _lerpPtr());
     _gyroscopeSubscription = gyroscopeEventStream().listen(
       (GyroscopeEvent event) {
-        target = _Vec2d(x: target.x + event.y, y: target.y + event.x);
+        target = _RelPtr(x: target.x + event.y, y: target.y + event.x);
       },
       onError: (error) {},
       cancelOnError: true,
     );
-    _lerpTimer = Timer.periodic(Duration(milliseconds: 33), (_) => _lerpPtr());
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _lerpTimer.cancel();
+    _gyroscopeSubscription.cancel();
+    super.dispose();
+  }
+
+  void _lerpPtr() {
+    setState(() {
+      ptr = _RelPtr(
+          x: _lerpDouble(ptr.x, target.x, 0.1),
+          y: _lerpDouble(ptr.y, target.y, 0.1));
+    });
+  }
+
+  void _pointerMove({
+    required double x,
+    required double y,
+  }) {
+    target = _RelPtr.fromAbs(x: x, y: y, size: size);
+  }
+
+  void _lockAnswerIn() {
+    final result = AnsweredQuestion(_isAnswerCorrect(widget.answers, ptr));
+
+    return Navigator.of(context).pop(result);
+  }
+
+  bool _onNotification(Notification notification) {
+    if (size.width == context.size!.width &&
+        size.height == context.size!.height) {
+      return true;
+    }
+    setState(() {
+      size = context.size!;
+    });
+    return true;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: NotificationListener(
+        onNotification: _onNotification,
+        child: Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerHover: (event) => _pointerMove(
+            x: event.position.dx,
+            y: event.position.dy,
+          ),
+          onPointerDown: (event) => _lockAnswerIn(),
+          child: _AnswersScreen(answers: widget.answers, ptr: ptr, size: size),
+        ),
+      ),
+    );
+  }
+}
+
+class _TriviaDialogState extends State<_TriviaDialog> {
+  int secondsLeftToAnswer = 90;
+
+  late final Timer _answerTimer;
+
+  @override
+  void initState() {
     _answerTimer = Timer.periodic(
       Duration(seconds: 1),
       (timer) {
@@ -198,50 +300,10 @@ class _TriviaDialogState extends State<_TriviaDialog> {
     super.initState();
   }
 
-  void _pointerMoveFallback(PointerHoverEvent event) {
-    target = _Vec2d(x: event.position.dx, y: event.position.dy);
-  }
-
-  double _lerpDouble(double pos, double tgt, double alpha) {
-    return (tgt - pos) * alpha + pos;
-  }
-
-  void _lerpPtr() {
-    setState(() {
-      ptr = _Vec2d(
-        x: _lerpDouble(ptr.x, target.x, 0.1),
-        y: _lerpDouble(ptr.y, target.y, 0.1),
-      );
-    });
-  }
-
   @override
   void dispose() {
-    _lerpTimer.cancel();
     _answerTimer.cancel();
-    _gyroscopeSubscription.cancel();
     super.dispose();
-  }
-
-  bool _isAnswerCorrect() {
-    final Answers(
-      topLeft: topLeft,
-      topRight: topRight,
-      bottomLeft: bottomLeft,
-      bottomRight: bottomRight
-    ) = widget.answers;
-
-    final answers = <({bool correct, WithinBounds withinBounds})>[
-      (correct: topLeft.correct, withinBounds: (x, y) => x <= 0 && y <= 0),
-      (correct: topRight.correct, withinBounds: (x, y) => x > 0 && y <= 0),
-      (correct: bottomLeft.correct, withinBounds: (x, y) => x <= 0 && y > 0),
-      (correct: bottomRight.correct, withinBounds: (x, y) => x > 0 && y > 0),
-    ];
-
-    final (:correct, withinBounds: _) =
-        answers.singleWhere((v) => v.withinBounds(ptr.x, ptr.y));
-
-    return correct;
   }
 
   void _timeoutReached() {
@@ -249,39 +311,28 @@ class _TriviaDialogState extends State<_TriviaDialog> {
     return Navigator.of(context).pop(result);
   }
 
-  void _lockAnswerIn() {
-    final result = AnsweredQuestion(_isAnswerCorrect());
-    return Navigator.of(context).pop(result);
-  }
-
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => _lockAnswerIn(),
-      child: Scaffold(
-        body: SafeArea(
-          child: Listener(
-            onPointerHover: _pointerMoveFallback,
-            child: Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text(
-                    "${widget.question} ($secondsLeftToAnswer)",
-                    style: TextStyle(fontSize: 24.0),
-                  ),
-                ),
-                _AnswersScreen(answers: widget.answers, ptr: ptr),
-                Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text(
-                    "Tap to lock answer in",
-                    style: TextStyle(fontSize: 20.0),
-                  ),
-                ),
-              ],
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                "${widget.question} ($secondsLeftToAnswer)",
+                style: TextStyle(fontSize: 24.0),
+              ),
             ),
-          ),
+            _IDEKANYMORE(answers: widget.answers),
+            Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                "Tap to lock answer in",
+                style: TextStyle(fontSize: 20.0),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -292,11 +343,14 @@ class _AnswersScreen extends StatelessWidget {
   const _AnswersScreen({
     required this.answers,
     required this.ptr,
+    required this.size,
   });
 
   final double spacing = 32;
+
   final Answers answers;
-  final _Vec2d ptr;
+  final _RelPtr ptr;
+  final Size size;
 
   Widget _answerColumn({
     required Answer top,
@@ -326,32 +380,31 @@ class _AnswersScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Stack(
-        children: [
-          Center(
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Row(
-                spacing: spacing,
-                children: [
-                  _answerColumn(
-                    top: answers.topLeft,
-                    bottom: answers.bottomLeft,
-                    highlighted: ptr.x <= 0,
-                  ),
-                  _answerColumn(
-                    top: answers.topRight,
-                    bottom: answers.topRight,
-                    highlighted: ptr.x > 0,
-                  ),
-                ],
-              ),
+    return Stack(
+      fit: StackFit.loose,
+      children: [
+        Center(
+          child: Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Row(
+              spacing: spacing,
+              children: [
+                _answerColumn(
+                  top: answers.topLeft,
+                  bottom: answers.bottomLeft,
+                  highlighted: ptr.x <= 0,
+                ),
+                _answerColumn(
+                  top: answers.topRight,
+                  bottom: answers.topRight,
+                  highlighted: ptr.x > 0,
+                ),
+              ],
             ),
           ),
-          _Pointer(x: ptr.x, y: ptr.y)
-        ],
-      ),
+        ),
+        _Pointer(ptr: ptr, size: size)
+      ],
     );
   }
 }
