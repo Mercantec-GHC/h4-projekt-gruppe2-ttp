@@ -185,8 +185,8 @@ class _RelPtr {
       : x = 0,
         y = 0;
   _RelPtr.fromAbs({required double x, required double y, required Size size})
-      : x = (x - size.width * 0.5) * 2,
-        y = (y - size.height * 0.5) * 2;
+      : x = ((x / size.width) - 0.5) * 2,
+        y = ((y / size.height) - 0.5) * 2;
 }
 
 typedef WithinBounds = bool Function(double x, double y);
@@ -218,6 +218,9 @@ class _IDEKANYMORESTATE extends State<_IDEKANYMORE> {
       onError: (error) {},
       cancelOnError: true,
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() => size = context.size!);
+    });
     super.initState();
   }
 
@@ -240,6 +243,13 @@ class _IDEKANYMORESTATE extends State<_IDEKANYMORE> {
     required double x,
     required double y,
   }) {
+    final csize = context.size;
+    if (csize == null) return;
+    if (csize.width == 0 || csize.height == 0) return;
+
+    if (size.width != csize.width || size.height != csize.height) {
+      setState(() => size = csize);
+    }
     target = _RelPtr.fromAbs(x: x, y: y, size: size);
   }
 
@@ -249,31 +259,17 @@ class _IDEKANYMORESTATE extends State<_IDEKANYMORE> {
     return Navigator.of(context).pop(result);
   }
 
-  bool _onNotification(Notification notification) {
-    if (size.width == context.size!.width &&
-        size.height == context.size!.height) {
-      return true;
-    }
-    setState(() {
-      size = context.size!;
-    });
-    return true;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: NotificationListener(
-        onNotification: _onNotification,
-        child: Listener(
-          behavior: HitTestBehavior.translucent,
-          onPointerHover: (event) => _pointerMove(
-            x: event.position.dx,
-            y: event.position.dy,
-          ),
-          onPointerDown: (event) => _lockAnswerIn(),
-          child: _AnswersScreen(answers: widget.answers, ptr: ptr, size: size),
+      child: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerHover: (event) => _pointerMove(
+          x: event.localPosition.dx,
+          y: event.localPosition.dy,
         ),
+        onPointerDown: (event) => _lockAnswerIn(),
+        child: _AnswersScreen(answers: widget.answers, ptr: ptr, size: size),
       ),
     );
   }
