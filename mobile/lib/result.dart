@@ -1,13 +1,13 @@
 sealed class Result<T> {}
 
-class Success<T> implements Result<T> {
+class Ok<T> implements Result<T> {
   final T data;
 
-  const Success(this.data);
+  const Ok(this.data);
 }
 
-class Error<T> implements Result<T> {
+class Err<T> implements Result<T> {
   final String message;
 
-  const Error(this.message);
+  const Err(this.message);
 }

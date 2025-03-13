@@ -17,12 +17,12 @@ class InputStats {
 class User {
   String id;
   String username;
-  Stats stats;
+  Stats? stats;
 
   User.fromJson(Map<String, dynamic> obj)
       : id = obj["id"],
         username = obj["username"],
-        stats = Stats.fromJson(obj["stats"]);
+        stats = obj["stats"] != null ? Stats.fromJson(obj["stats"]) : null;
 }
 
 class Stats {
@@ -44,44 +44,44 @@ class Client {
   Future<Result<String>> login(String username, String password) async {
     final body = json.encode({"username": username, "password": password});
 
-    var res = await http.post(Uri.parse("$apiUrl/login"),
+    final res = await http.post(Uri.parse("$apiUrl/login"),
         headers: {"Content-Type": "application/json"}, body: body);
-    var resData = json.decode(res.body);
+    final resData = json.decode(res.body);
 
     if (resData["ok"]) {
-      return Success(resData["token"]);
+      return Ok(resData["token"]);
     } else {
-      return Error(resData["message"]);
+      return Err(resData["message"]);
     }
   }
 
   Future<Result<Null>> register(String username, String password) async {
     final body = json.encode({"username": username, "password": password});
 
-    var res = await http.post(Uri.parse("$apiUrl/createUser"),
+    final res = await http.post(Uri.parse("$apiUrl/createUser"),
         headers: {"Content-Type": "application/json"}, body: body);
 
-    var resData = json.decode(res.body);
+    final resData = json.decode(res.body);
 
     if (resData["ok"]) {
-      return Success(null);
+      return Ok(null);
     } else {
-      return Error(resData["message"]);
+      return Err(resData["message"]);
     }
   }
 
   Future<Result<User>> getUserInfo(String token) async {
     final body = json.encode({"token": token});
 
-    var res = await http.post(Uri.parse("$apiUrl/getStats"),
+    final res = await http.post(Uri.parse("$apiUrl/user"),
         headers: {"Content-Type": "application/json"}, body: body);
 
-    var resData = await json.decode(res.body);
+    final resData = await json.decode(res.body);
 
     if (resData["ok"]) {
-      return Success(User.fromJson(resData["user"]));
+      return Ok(User.fromJson(resData["user"]));
     } else {
-      return Error(resData["message"]);
+      return Err(resData["message"]);
     }
   }
 
@@ -95,15 +95,15 @@ class Client {
       },
     });
 
-    var res = await http.post(Uri.parse("$apiUrl/saveGame"),
+    final res = await http.post(Uri.parse("$apiUrl/saveGame"),
         headers: {"Content-Type": "application/json"}, body: body);
 
-    var resData = json.decode(res.body);
+    final resData = json.decode(res.body);
 
     if (resData["ok"]) {
-      return Success(null);
+      return Ok(null);
     } else {
-      return Error(resData["message"]);
+      return Err(resData["message"]);
     }
   }
 }

@@ -5,114 +5,97 @@ import 'package:mobile/client.dart' as client;
 import 'package:mobile/controllers/user.dart';
 import 'package:provider/provider.dart';
 
-class _HomePage extends StatefulWidget {
-  const _HomePage();
-
-  @override
-  _HomePageState createState() => _HomePageState();
-}
-
-class _HomePageState extends State<_HomePage> {
-  client.User? user;
-
-  @override
-  void initState() {
-    super.initState();
-  }
+class _StatsPage extends StatelessWidget {
+  const _StatsPage();
 
   @override
   Widget build(BuildContext context) {
-    return user == null
-        ? Center(child: CircularProgressIndicator())
-        : Consumer<UserController>(builder: (ctx, controller, _) {
-            final user = controller.session!.user;
-            final stats = user.stats;
-            final wins = stats.wins;
-            final gamesPlayed = stats.gamesPlayed;
-            final losses = gamesPlayed - wins;
-            final correctnessRatio = stats.totalAnswers != 0
-                ? stats.correctAnswers / stats.totalAnswers
-                : 0;
-            return Column(
-              children: [
-                RichText(
-                  text: TextSpan(
-                    style: DefaultTextStyle.of(context).style,
-                    children: <TextSpan>[
-                      TextSpan(
-                          text: 'Velkommen, ',
-                          style: TextStyle(fontSize: 24.0)),
-                      TextSpan(
-                          text: user.username,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 24.0)),
-                    ],
+    return Consumer<UserController>(builder: (ctx, controller, _) {
+      final user = controller.session!.user;
+      final stats = user.stats;
+      return Column(children: [
+        RichText(
+          text: TextSpan(
+            style: DefaultTextStyle.of(context).style,
+            children: <TextSpan>[
+              TextSpan(text: 'Velkommen, ', style: TextStyle(fontSize: 24.0)),
+              TextSpan(
+                  text: user.username,
+                  style:
+                      TextStyle(fontWeight: FontWeight.bold, fontSize: 24.0)),
+            ],
+          ),
+        ),
+        Divider(),
+        stats != null
+            ? Column(
+                children: [
+                  RichText(
+                    text: TextSpan(
+                      style: DefaultTextStyle.of(context).style,
+                      children: <TextSpan>[
+                        TextSpan(
+                            text: 'Gange vundet: ',
+                            style: TextStyle(fontSize: 20.0)),
+                        TextSpan(
+                            text: '${stats.wins}',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 20.0)),
+                        TextSpan(text: ' 👑', style: TextStyle(fontSize: 20.0)),
+                      ],
+                    ),
                   ),
-                ),
-                Divider(),
-                RichText(
-                  text: TextSpan(
-                    style: DefaultTextStyle.of(context).style,
-                    children: <TextSpan>[
-                      TextSpan(
-                          text: 'Gange vundet: ',
-                          style: TextStyle(fontSize: 20.0)),
-                      TextSpan(
-                          text: '$wins',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 20.0)),
-                      TextSpan(text: ' 👑', style: TextStyle(fontSize: 20.0)),
-                    ],
+                  RichText(
+                    text: TextSpan(
+                      style: DefaultTextStyle.of(context).style,
+                      children: <TextSpan>[
+                        TextSpan(
+                            text: 'Gange tabt: ',
+                            style: TextStyle(fontSize: 20.0)),
+                        TextSpan(
+                            text: '${stats.gamesPlayed - stats.wins}',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 20.0)),
+                        TextSpan(text: ' 😞', style: TextStyle(fontSize: 20.0)),
+                      ],
+                    ),
                   ),
-                ),
-                RichText(
-                  text: TextSpan(
-                    style: DefaultTextStyle.of(context).style,
-                    children: <TextSpan>[
-                      TextSpan(
-                          text: 'Gange tabt: ',
-                          style: TextStyle(fontSize: 20.0)),
-                      TextSpan(
-                          text: '$losses',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 20.0)),
-                      TextSpan(text: ' 😞', style: TextStyle(fontSize: 20.0)),
-                    ],
+                  RichText(
+                    text: TextSpan(
+                      style: DefaultTextStyle.of(context).style,
+                      children: <TextSpan>[
+                        TextSpan(
+                            text: 'Spil i alt: ',
+                            style: TextStyle(fontSize: 20.0)),
+                        TextSpan(
+                            text: '${stats.gamesPlayed}',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 20.0)),
+                        TextSpan(text: ' ⚔️', style: TextStyle(fontSize: 20.0)),
+                      ],
+                    ),
                   ),
-                ),
-                RichText(
-                  text: TextSpan(
-                    style: DefaultTextStyle.of(context).style,
-                    children: <TextSpan>[
-                      TextSpan(
-                          text: 'Spil i alt: ',
-                          style: TextStyle(fontSize: 20.0)),
-                      TextSpan(
-                          text: '$gamesPlayed',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 20.0)),
-                      TextSpan(text: ' ⚔️', style: TextStyle(fontSize: 20.0)),
-                    ],
+                  RichText(
+                    text: TextSpan(
+                      style: DefaultTextStyle.of(context).style,
+                      children: <TextSpan>[
+                        TextSpan(
+                            text: 'Korrekte svar: ',
+                            style: TextStyle(fontSize: 20.0)),
+                        TextSpan(
+                            text:
+                                '${(stats.totalAnswers != 0 ? stats.correctAnswers / stats.totalAnswers : 0) * 100}%',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 20.0)),
+                        TextSpan(text: ' ✅', style: TextStyle(fontSize: 20.0)),
+                      ],
+                    ),
                   ),
-                ),
-                RichText(
-                  text: TextSpan(
-                    style: DefaultTextStyle.of(context).style,
-                    children: <TextSpan>[
-                      TextSpan(
-                          text: 'Korrekte svar: ',
-                          style: TextStyle(fontSize: 20.0)),
-                      TextSpan(
-                          text: '${correctnessRatio * 100}%',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 20.0)),
-                      TextSpan(text: ' ✅', style: TextStyle(fontSize: 20.0)),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          });
+                ],
+              )
+            : Text("Du har ikke spillet nogle spil endnu, se at komme i gang!"),
+      ]);
+    });
   }
 }
 
@@ -168,36 +151,41 @@ class _ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text("%username%", style: TextStyle(fontSize: 24.0)),
-        SizedBox(height: 16.0),
-        FilledButton(
-          onPressed: () {},
-          child: Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Text(
-              "Lock uij",
-              style: TextStyle(fontSize: 16.0),
+    return Consumer<UserController>(
+      builder: (context, controller, _) => Column(
+        children: [
+          Text(controller.session!.user.username,
+              style: TextStyle(fontSize: 24.0)),
+          SizedBox(height: 16.0),
+          FilledButton(
+            onPressed: () async {
+              await controller.logout();
+            },
+            child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                "Log ud",
+                style: TextStyle(fontSize: 16.0),
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
-class HomeNavigation extends StatefulWidget {
-  const HomeNavigation({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
-  State<StatefulWidget> createState() => _HomeNavigationState();
+  State<StatefulWidget> createState() => _HomePageState();
 }
 
 enum _Page {
-  homePage,
-  battlePage,
-  profilePage,
+  stats,
+  battle,
+  profile,
 }
 
 class _CardContainer extends StatelessWidget {
@@ -221,10 +209,10 @@ class _CardContainer extends StatelessWidget {
       );
 }
 
-class _HomeNavigationState extends State<HomeNavigation> {
-  _HomeNavigationState();
+class _HomePageState extends State<HomePage> {
+  _HomePageState();
 
-  var _index = _Page.homePage;
+  var _index = _Page.stats;
 
   void _setPage(_Page page) => setState(() => _index = page);
 
@@ -237,11 +225,11 @@ class _HomeNavigationState extends State<HomeNavigation> {
           onTap: (index) {
             switch (index) {
               case 0:
-                return _setPage(_Page.homePage);
+                return _setPage(_Page.stats);
               case 1:
-                return _setPage(_Page.battlePage);
+                return _setPage(_Page.battle);
               case 2:
-                return _setPage(_Page.profilePage);
+                return _setPage(_Page.profile);
               case _:
                 throw Exception("unreachable");
             }
@@ -249,23 +237,23 @@ class _HomeNavigationState extends State<HomeNavigation> {
           backgroundColor: Theme.of(context).cardColor,
           items: [
             BottomNavigationBarItem(
-                label: "Hjem",
-                icon: Text("🏠",
-                    style: TextStyle(fontSize: _fontSize(_Page.homePage)))),
+                label: "Statistik",
+                icon: Text("📊",
+                    style: TextStyle(fontSize: _fontSize(_Page.stats)))),
             BottomNavigationBarItem(
                 label: "Start kamp",
                 icon: Text("🆚",
-                    style: TextStyle(fontSize: _fontSize(_Page.battlePage)))),
+                    style: TextStyle(fontSize: _fontSize(_Page.battle)))),
             BottomNavigationBarItem(
                 label: "Profil",
                 icon: Text("👤",
-                    style: TextStyle(fontSize: _fontSize(_Page.profilePage))))
+                    style: TextStyle(fontSize: _fontSize(_Page.profile))))
           ]),
       body: Center(
         child: switch (_index) {
-          _Page.profilePage => _CardContainer(child: _ProfilePage()),
-          _Page.homePage => _CardContainer(child: _HomePage()),
-          _Page.battlePage => _BattlePage(),
+          _Page.stats => _CardContainer(child: _StatsPage()),
+          _Page.battle => _BattlePage(),
+          _Page.profile => _CardContainer(child: _ProfilePage()),
         },
       ),
     );

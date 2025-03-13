@@ -28,13 +28,13 @@ class _RegisterPageState extends State<RegisterPage> {
     if (!mounted) return;
     setState(() => _status = _Ready());
     switch (response) {
-      case Success():
+      case Ok():
         final snackBar = SnackBar(content: Text("Bruger oprettet!"));
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         Navigator.of(context)
             .pop(MaterialPageRoute(builder: (_) => LoginPage()));
         return;
-      case Error(message: final message):
+      case Err(message: final message):
         final snackBar = SnackBar(content: Text(message));
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         return;

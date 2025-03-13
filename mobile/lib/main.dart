@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/client.dart';
 import 'package:mobile/controllers/user.dart';
+import 'package:mobile/pages/home.dart';
 import 'package:mobile/pages/login.dart';
 import 'package:mobile/prefs.dart';
 import 'package:provider/provider.dart';
@@ -19,17 +20,17 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(useMaterial3: true),
-      home: MultiProvider(
-        providers: [
-          Provider<UserController>(
-              create: (_) => UserController(client: client, prefs: prefs))
-        ],
-        builder: (_, __) => Scaffold(
-          body: LoginPage(),
-        ),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<UserController>(
+            create: (_) => UserController(client: client, prefs: prefs))
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(useMaterial3: true),
+        home: Consumer<UserController>(
+            builder: (_, controller, __) =>
+                controller.session == null ? LoginPage() : HomePage()),
       ),
     );
   }

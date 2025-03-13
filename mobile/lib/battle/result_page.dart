@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-Future showBattleResult(
+Future<void> showBattleResult(
     {required BuildContext context, required bool won}) async {
-  final value = await Navigator.push(
+  await Navigator.push(
     context,
     MaterialPageRoute(
       builder: (context) => _BattleResultPage(
@@ -10,10 +10,6 @@ Future showBattleResult(
       ),
     ),
   );
-  if (value == null) {
-    throw Exception("hopefully unreachable?");
-  }
-  return value;
 }
 
 class _BattleResultPage extends StatelessWidget {

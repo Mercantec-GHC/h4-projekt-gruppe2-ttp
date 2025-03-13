@@ -50,9 +50,9 @@ class Base {
 }
 
 Troop _randomTroop() {
-  var name = randomTroopName();
-  var health = _randomInt(min: 5, max: 10);
-  var damage = _randomInt(min: 1, max: 3);
+  final name = randomTroopName();
+  final health = _randomInt(min: 5, max: 10);
+  final damage = _randomInt(min: 1, max: 3);
   return Troop(name: name, health: health, damage: damage);
 }
 
@@ -67,13 +67,13 @@ class Battle {
 
   void _cullDeadTroops() {
     if (_playerTroops.isNotEmpty) {
-      var first = _playerTroops.removeFirst();
+      final first = _playerTroops.removeFirst();
       if (first._alive()) {
         _playerTroops.addFirst(first);
       }
     }
     if (_enemyTroops.isNotEmpty) {
-      var first = _enemyTroops.removeFirst();
+      final first = _enemyTroops.removeFirst();
       if (first._alive()) {
         _enemyTroops.addFirst(first);
       }
@@ -92,7 +92,7 @@ class Battle {
   }
 
   void _applyPlayerAttack() {
-    var damage = _playerTroops.isNotEmpty ? _playerTroops.first.damage : 0;
+    final damage = _playerTroops.isNotEmpty ? _playerTroops.first.damage : 0;
 
     if (_enemyTroops.isNotEmpty) {
       _enemyTroops.first._hurt(damage);
@@ -102,7 +102,7 @@ class Battle {
   }
 
   void _applyEnemyAttack() {
-    var damage = _enemyTroops.isNotEmpty ? _enemyTroops.first.damage : 0;
+    final damage = _enemyTroops.isNotEmpty ? _enemyTroops.first.damage : 0;
 
     if (_playerTroops.isNotEmpty) {
       _playerTroops.first._hurt(damage);

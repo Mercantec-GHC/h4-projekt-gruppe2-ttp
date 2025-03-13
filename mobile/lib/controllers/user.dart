@@ -24,40 +24,46 @@ class UserController extends ChangeNotifier {
     if (token == null) {
       return;
     }
-    await startSessionWithToken(token);
+    await refreshSessionWithToken(token);
   }
 
   Future<Result<Null>> login(String username, String password) async {
     final res = await client.login(username, password);
     switch (res) {
-      case Success(data: final token):
-        return await startSessionWithToken(token);
-      case Error(message: final message):
-        return Error(message);
+      case Ok(data: final token):
+        return await refreshSessionWithToken(token);
+      case Err(message: final message):
+        return Err(message);
     }
+  }
+
+  Future<Result<Null>> logout() async {
+    session = null;
+    notifyListeners();
+    return Ok(null);
   }
 
   Future<Result<Null>> saveStats(String token, InputStats stats) async {
     final res = await client.saveGame(token, stats);
     switch (res) {
-      case Success():
-        return await startSessionWithToken(token);
-      case Error(message: final message):
-        return Error(message);
+      case Ok():
+        return await refreshSessionWithToken(token);
+      case Err(message: final message):
+        return Err(message);
     }
   }
 
-  Future<Result<Null>> startSessionWithToken(String token) async {
+  Future<Result<Null>> refreshSessionWithToken(String token) async {
     final res = await client.getUserInfo(token);
     switch (res) {
-      case Success(data: final user):
+      case Ok(data: final user):
         await prefs.setToken(token);
         session = Session(user: user, token: token);
         notifyListeners();
-        return Success(null);
-      case Error(message: final message):
+        return Ok(null);
+      case Err(message: final message):
         await prefs.removeToken();
-        return Error(message);
+        return Err(message);
     }
   }
 }

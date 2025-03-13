@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/client.dart';
 import 'package:mobile/controllers/user.dart';
-import 'package:mobile/pages/home.dart';
 import 'package:mobile/logo.dart';
 import 'package:mobile/pages/register.dart';
 import 'package:mobile/result.dart';
@@ -27,24 +25,13 @@ class _LoginPageState extends State<LoginPage> {
 
   _loginPressed(String username, String password) async {
     setState(() => _status = _Loading());
-    final response = await Client().login(username, password);
-    if (!mounted) return;
+    final response =
+        await context.read<UserController>().login(username, password);
     setState(() => _status = _Ready());
-    switch (response) {
-      case Success(data: final token):
-        await context.read<UserController>().startSessionWithToken(token);
-
-        if (!mounted) return;
-
-        final snackBar = SnackBar(content: Text("Logged ind!"));
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        Navigator.of(context)
-            .push(MaterialPageRoute(builder: (_) => HomeNavigation()));
-        return;
-      case Error(message: final message):
-        final snackBar = SnackBar(content: Text(message));
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        return;
+    if (response case Err(message: final message)) {
+      if (!mounted) return;
+      final snackBar = SnackBar(content: Text(message));
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
   }
 
