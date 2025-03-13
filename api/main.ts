@@ -4,6 +4,7 @@ import { Db, Stats, Token, token } from "./db.ts";
 import { MariaDb } from "./mariadbConnect.ts";
 import { err, ok, Result } from "jsr:@result/result";
 import { HashedPassword } from "./hashed_password.ts";
+import { MemDb } from "./memDb.ts";
 
 interface RegisterRequest {
   username: string;
@@ -121,7 +122,7 @@ const port = 8000;
 
 async function main() {
   const router = new oak.Router();
-  const db: Db = await MariaDb.connect();
+  const db: Db = new MemDb();
   const tokens: Token[] = [];
 
   router.post("/createUser", async (ctx) => {
