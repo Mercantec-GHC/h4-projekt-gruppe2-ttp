@@ -1,6 +1,6 @@
 import * as oak from "jsr:@oak/oak";
 import { oakCors } from "https://deno.land/x/cors@v1.2.2/mod.ts";
-import { Db, Token, token } from "./db.ts";
+import { Db, Token, token, User } from "./db.ts";
 import { MariaDb } from "./mariadbConnect.ts";
 import { err, ok, Result } from "jsr:@result/result";
 import { HashedPassword } from "./hashed_password.ts";
@@ -15,7 +15,7 @@ interface LoginRequest {
   password: string;
 }
 
-interface GetStatsRequest {
+interface UserInfoRequest {
   token: string;
 }
 
@@ -72,14 +72,14 @@ async function login(
 
   return ok(token(existingUser.id));
 }
-async function getUserStats(
+async function getUser(
   db: Db,
-  req: string,
-): Promise<Result<OutputStats, string>> {
-  const userStats = await db.userStats(req);
+  userId: string,
+): Promise<Result<User, string>> {
+  const user = await db.user(userId);
 
-  if (userStats != null) {
-    return ok(userStats);
+  if (user != null) {
+    return ok(user);
   } else {
     return err("No user found");
   }
@@ -87,10 +87,10 @@ async function getUserStats(
 
 async function saveUserStats(
   db: Db,
-  req: InputStats,
-  username: string,
+  stats: InputStats,
+  userId: string,
 ): Promise<Result<string, string>> {
-  const res = await db.saveUserStats(username, req);
+  const res = await db.saveUserStats(userId, stats);
 
   if (res == null) {
     return ok("Success");
@@ -151,18 +151,18 @@ async function main() {
     );
   });
 
-  router.post("/getStats", async (ctx) => {
-    const req: GetStatsRequest = await ctx.request.body.json();
+  router.post("/user", async (ctx) => {
+    const req: UserInfoRequest = await ctx.request.body.json();
     const token = tokens.find((v) => v.value === req.token);
     if (!token) {
       ctx.response.body = { ok: false, message: "Invalid token" };
       return;
     }
 
-    (await getUserStats(db, token.user))
+    (await getUser(db, token.user))
       .match(
-        (stats: OutputStats) => {
-          ctx.response.body = { ok: true, message: "Success", stats };
+        (user: User) => {
+          ctx.response.body = { ok: true, message: "Success", user };
         },
         (err: string) => {
           ctx.response.body = { ok: false, message: err };

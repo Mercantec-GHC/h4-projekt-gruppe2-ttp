@@ -1,6 +1,23 @@
-import { Db, InputStats, OutputStats, User, uuid } from "./db.ts";
+import { Db, InputStats, Stats, User, uuid } from "./db.ts";
 import { HashedPassword } from "./hashed_password.ts";
-import { Client } from "https://deno.land/x/mysql@v2.12.1/mod.ts";
+import {
+  Client,
+  ExecuteResult,
+} from "https://deno.land/x/mysql@v2.12.1/mod.ts";
+
+type DbUser = {
+  id: string;
+  username: string;
+  password: string;
+};
+
+type DbStats = {
+  user_id: string;
+  correct_answers: number;
+  total_answers: number;
+  wins: number;
+  games_played: number;
+};
 
 export class MariaDb implements Db {
   private connection: Client;
@@ -38,34 +55,50 @@ export class MariaDb implements Db {
     return null;
   }
 
+  private extractFirstRow<T>(result: ExecuteResult): T | null {
+    if (!result.rows || result.rows.length === 0) {
+      return null;
+    }
+    const row = result.rows[0] ?? null;
+    if (!row) {
+      return null;
+    }
+    return row as T;
+  }
+
   public async userFromUsername(username: string): Promise<User | null> {
     const result = await this.connection.execute(
       "SELECT * FROM users WHERE username = ?",
       [username],
     );
-    if (!result.rows || result.rows.length === 0) {
+    const user = this.extractFirstRow<DbUser>(result);
+    if (user == null) {
       return null;
     }
-    const user = result.rows[0] ?? null;
-    if (!user) {
-      return null;
-    }
-    return user as User;
+    const stats = await this.userStats(user.id);
+    return {
+      id: user.id,
+      username: user.username,
+      password: user.password,
+      stats,
+    };
   }
 
-  public async userStats(userId: string): Promise<OutputStats | null> {
+  public async user(userId: string): Promise<User | null> {
+    const result = await this.connection.execute(
+      "SELECT * FROM users WHERE id = ?",
+      [userId],
+    );
+    return this.extractFirstRow(result);
+  }
+
+  public async userStats(userId: string): Promise<Stats | null> {
     const result = await this.connection.execute(
       "SELECT * FROM user_stats WHERE id = ?",
       [userId],
     );
-    if (!result.rows || result.rows.length === 0) {
-      return null;
-    }
-    const user = result.rows[0] ?? null;
-    if (!user) {
-      return null;
-    }
-    return user as OutputStats;
+    const stats = this.extractFirstRow<DbStats>(result);
+    return stats;
   }
 
   public async saveUserStats(
@@ -80,7 +113,6 @@ export class MariaDb implements Db {
         [userId],
       );
       current = {
-        user_id: userId,
         total_answers: 0,
         correct_answers: 0,
         games_played: 0,
@@ -95,7 +127,7 @@ export class MariaDb implements Db {
         current.total_answers + stats.total_answers,
         current.wins + (stats.won ? 1 : 0),
         current.games_played + 1,
-        current.user_id,
+        userId,
       ],
     );
 
