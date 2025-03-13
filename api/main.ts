@@ -4,7 +4,6 @@ import { Db, Token, token } from "./db.ts";
 import { MariaDb } from "./mariadbConnect.ts";
 import { err, ok, Result } from "jsr:@result/result";
 import { HashedPassword } from "./hashed_password.ts";
-import { promiseHooks } from "node:v8";
 
 interface RegisterRequest {
   username: string;
@@ -18,8 +17,8 @@ interface LoginRequest {
 
 interface InputStats {
   won: boolean;
-  correctanswers: number;
-  totalanswers: number;
+  correct_answers: number;
+  total_answers: number;
 }
 
 interface OutputStats {

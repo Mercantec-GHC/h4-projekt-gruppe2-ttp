@@ -31,7 +31,6 @@ export class MariaDb implements Db {
     password: HashedPassword,
   ): Promise<null> {
     const id = uuid();
-    console.log(password.value);
     await this.connection.execute(
       "INSERT INTO users(id, username, password) VALUES(?, ?, ?)",
       [id, username, password.value],
@@ -74,7 +73,7 @@ export class MariaDb implements Db {
     stats: InputStats,
   ): Promise<null> {
     const current = await this.getUserStats(username);
-    let correctness = stats.correctanswers / stats.totalanswers;
+    let correctness = stats.correct_answers / stats.total_answers;
 
     if (Number.isNaN(correctness)) {
       correctness = 0;

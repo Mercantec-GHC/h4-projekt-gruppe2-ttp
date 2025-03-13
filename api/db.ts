@@ -4,7 +4,6 @@ export type User = {
   id: string;
   name: string;
   password: string;
-  stats: OutputStats;
 };
 
 export type OutputStats = {
@@ -17,8 +16,8 @@ export type OutputStats = {
 
 export type InputStats = {
   won: boolean;
-  correctanswers: number;
-  totalanswers: number;
+  correct_answers: number;
+  total_answers: number;
 };
 
 export type Questions = {
@@ -27,7 +26,6 @@ export type Questions = {
   category: string;
 };
 
-// Token creation
 export function uuid() {
   const id = crypto.randomUUID();
   return id;
