@@ -42,7 +42,7 @@ async function createUser(
   db: Db,
   req: RegisterRequest,
 ): Promise<Result<void, string>> {
-  const existingUser = await db.user(req.username);
+  const existingUser = await db.userFromUsername(req.username);
 
   if (existingUser !== null) {
     return err("User already exists");
@@ -56,7 +56,7 @@ async function login(
   db: Db,
   req: LoginRequest,
 ): Promise<Result<Token, string>> {
-  const existingUser = await db.user(req.username);
+  const existingUser = await db.userFromUsername(req.username);
 
   if (existingUser === null) {
     return err("No user found");

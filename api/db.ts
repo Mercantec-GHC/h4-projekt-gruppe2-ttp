@@ -45,7 +45,7 @@ export function token(user: User["id"]): Token {
 
 export interface Db {
   createUser(username: string, password: HashedPassword): Promise<null>;
-  user(userId: string): Promise<User | null>;
+  userFromUsername(username: string): Promise<User | null>;
   userStats(userId: string): Promise<OutputStats | null>;
   saveUserStats(userId: string, stats: InputStats): Promise<null>;
 }

@@ -38,10 +38,10 @@ export class MariaDb implements Db {
     return null;
   }
 
-  public async user(userId: string): Promise<User | null> {
+  public async userFromUsername(username: string): Promise<User | null> {
     const result = await this.connection.execute(
-      "SELECT * FROM users WHERE id = ?",
-      [userId],
+      "SELECT * FROM users WHERE username = ?",
+      [username],
     );
     if (!result.rows || result.rows.length === 0) {
       return null;
