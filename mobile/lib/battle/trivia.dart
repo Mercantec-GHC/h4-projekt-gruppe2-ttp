@@ -191,16 +191,16 @@ class _RelPtr {
 
 typedef WithinBounds = bool Function(double x, double y);
 
-class _IDEKANYMORE extends StatefulWidget {
+class _PointerListener extends StatefulWidget {
   final Answers answers;
 
-  const _IDEKANYMORE({required this.answers});
+  const _PointerListener({required this.answers});
 
   @override
-  State<StatefulWidget> createState() => _IDEKANYMORESTATE();
+  State<StatefulWidget> createState() => _PointerListenerState();
 }
 
-class _IDEKANYMORESTATE extends State<_IDEKANYMORE> {
+class _PointerListenerState extends State<_PointerListener> {
   _RelPtr ptr = _RelPtr.zero();
   _RelPtr target = _RelPtr.zero();
   Size size = Size.zero;
@@ -243,12 +243,11 @@ class _IDEKANYMORESTATE extends State<_IDEKANYMORE> {
     required double x,
     required double y,
   }) {
-    final csize = context.size;
-    if (csize == null) return;
-    if (csize.width == 0 || csize.height == 0) return;
-
-    if (size.width != csize.width || size.height != csize.height) {
-      setState(() => size = csize);
+    final cSize = context.size;
+    if (cSize == null) return;
+    if (cSize.width == 0 || cSize.height == 0) return;
+    if (size.width != cSize.width || size.height != cSize.height) {
+      setState(() => size = cSize);
     }
     target = _RelPtr.fromAbs(x: x, y: y, size: size);
   }
@@ -320,7 +319,7 @@ class _TriviaDialogState extends State<_TriviaDialog> {
                 style: TextStyle(fontSize: 24.0),
               ),
             ),
-            _IDEKANYMORE(answers: widget.answers),
+            _PointerListener(answers: widget.answers),
             Padding(
               padding: EdgeInsets.all(16.0),
               child: Text(
