@@ -21,7 +21,7 @@ export class MariaDb implements Db {
       "CREATE TABLE IF NOT EXISTS users (id NVARCHAR(255) PRIMARY KEY, username TEXT, password TEXT)",
     );
     await db.execute(
-      "CREATE TABLE IF NOT EXISTS user_stats (user_id NVARCHAR(255), win_ratio FLOAT, wins INT, correctness FLOAT, games_played INT, lost INT)",
+      "CREATE TABLE IF NOT EXISTS user_stats (user_id NVARCHAR(255), correct_answers INT, total_answers INT, wins INT, games_played INT)",
     );
     return new MariaDb(db);
   }
@@ -72,62 +72,33 @@ export class MariaDb implements Db {
     userId: string,
     stats: InputStats,
   ): Promise<null> {
-    const current = await this.userStats(userId);
-    let correctness = stats.correct_answers / stats.total_answers;
-
-    if (Number.isNaN(correctness)) {
-      correctness = 0;
-    }
-
-    if (current != null) {
-      correctness = current.correctness + correctness;
-    }
+    let current = await this.userStats(userId);
 
     if (current == null) {
-      //creates stat record for user in db with a win
-      if (stats.won == true) {
-        await this.connection.execute(
-          "INSERT INTO user_stats(user_id, win_ratio, wins, correctness, games_played, lost) VALUES(?, ?, ?, ?, ?, ?)",
-          [userId, 1, 1, correctness, 1, 0],
-        );
-      }
-      //creates stat record for user in db with a loss
-      if (stats.won == false) {
-        await this.connection.execute(
-          "INSERT INTO user_stats(user_id, win_ratio, wins, correctness, games_played, lost) VALUES(?, ?, ?, ?, ?, ?)",
-          [userId, 0, 0, correctness, 1, 1],
-        );
-      }
-      return null;
-    }
-    //updates stat record for user in db with a win or loss
-    if (stats.won == true) {
-      const winratio = (current.wins + 1) / (current.games_played + 1);
       await this.connection.execute(
-        "UPDATE user_stats SET win_ratio = ?, wins = ?, correctness = ?, games_played = ?, lost = ? WHERE user_id = ?",
-        [
-          winratio,
-          current.wins + 1,
-          correctness,
-          current.games_played + 1,
-          current.lost,
-          userId,
-        ],
+        "INSERT INTO user_stats(user_id, correct_answers, total_answers, wins, games_played) VALUES(?, 0, 0, 0, 0)",
+        [userId],
       );
-    } else {
-      const winratio = (current.wins) / (current.games_played + 1);
-      await this.connection.execute(
-        "UPDATE user_stats SET win_ratio = ?, wins = ?, correctness = ?, games_played = ?, lost = ? WHERE user_id = ?",
-        [
-          winratio,
-          current.wins,
-          correctness,
-          current.games_played + 1,
-          current.lost + 1,
-          userId,
-        ],
-      );
+      current = {
+        user_id: userId,
+        total_answers: 0,
+        correct_answers: 0,
+        games_played: 0,
+        wins: 0,
+      };
     }
+
+    await this.connection.execute(
+      "UPDATE user_stats SET correct_answers = ?, total_answers = ?, wins = ?, games_played = ? WHERE user_id = ?",
+      [
+        current.correct_answers + stats.correct_answers,
+        current.total_answers + stats.total_answers,
+        current.wins + (stats.won ? 1 : 0),
+        current.games_played + 1,
+        current.user_id,
+      ],
+    );
+
     return null;
   }
 }

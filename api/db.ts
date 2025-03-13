@@ -7,11 +7,11 @@ export type User = {
 };
 
 export type OutputStats = {
-  win_ratio: number;
+  user_id: string;
+  correct_answers: number;
+  total_answers: number;
   wins: number;
-  correctness: number;
   games_played: number;
-  lost: number;
 };
 
 export type InputStats = {
