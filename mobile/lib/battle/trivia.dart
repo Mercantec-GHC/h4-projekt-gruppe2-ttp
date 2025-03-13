@@ -1,8 +1,17 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+Future<List<Trivia>> loadTrivia() async {
+  return await rootBundle
+      .loadString("assets/trivia_questions.json")
+      .then((content) => jsonDecode(content) as List<dynamic>)
+      .then((questions) =>
+          questions.map((trivia) => Trivia.fromJson(trivia)).toList());
+}
 
 class Trivia {
   final String category;

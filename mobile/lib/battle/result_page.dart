@@ -1,19 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/home_page.dart';
 
-class BattleResultPage extends StatelessWidget {
-  const BattleResultPage({
-    super.key,
-    required this.victory,
+Future showBattleResult(
+    {required BuildContext context, required bool playerWon}) async {
+  final value = await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => _BattleResultPage(
+        playerWon: playerWon,
+      ),
+    ),
+  );
+  if (value == null) {
+    throw Exception("hopefully unreachable?");
+  }
+  return value;
+}
+
+class _BattleResultPage extends StatelessWidget {
+  const _BattleResultPage({
+    required this.playerWon,
   });
 
-  final bool victory;
+  final bool playerWon;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => HomeNavigation())),
+      onTap: () => Navigator.of(context).pop(),
       child: Scaffold(
         body: Center(
           child: Column(
@@ -22,7 +35,7 @@ class BattleResultPage extends StatelessWidget {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: victory
+                  color: playerWon
                       ? ColorScheme.of(context).primary
                       : ColorScheme.of(context).error,
                   borderRadius: BorderRadius.circular(8.0),
@@ -31,13 +44,13 @@ class BattleResultPage extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Text(
-                    victory
+                    playerWon
                         ? "Vinder, vinder, kyllinge aftensmad 😁👍"
                         : "Du tabte, womp womp ☹️👎",
                     style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: victory
+                        color: playerWon
                             ? ColorScheme.of(context).onPrimary
                             : ColorScheme.of(context).onError),
                   ),

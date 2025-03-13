@@ -4,8 +4,18 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:mobile/battle/logic.dart';
 import 'package:mobile/battle/result_page.dart';
-import 'package:mobile/battle/trivia_dialog.dart';
-import 'package:mobile/client.dart';
+import 'package:mobile/battle/trivia.dart';
+
+class BattleResult {
+  final bool playerWon;
+  final int correctAnswers;
+  final int totalAnswers;
+
+  const BattleResult(
+      {required this.playerWon,
+      required this.correctAnswers,
+      required this.totalAnswers});
+}
 
 class _Healthbar extends StatelessWidget {
   const _Healthbar({
@@ -204,22 +214,37 @@ class _TroopList extends StatelessWidget {
   }
 }
 
-class BattlePage extends StatefulWidget {
-  final List<Trivia> trivia;
-
-  const BattlePage({super.key, required this.trivia});
-
-  @override
-  State<BattlePage> createState() => _BattlePageState();
+Future<BattleResult> startBattle(
+    {required BuildContext context, required List<Trivia> trivia}) async {
+  final value = await Navigator.push<BattleResult>(
+    context,
+    MaterialPageRoute(
+      builder: (context) => _BattlePage(trivia: trivia),
+    ),
+  );
+  if (value == null) {
+    throw Exception("hopefully unreachable?");
+  }
+  return value;
 }
 
-class _BattlePageState extends State<BattlePage> with TickerProviderStateMixin {
+class _BattlePage extends StatefulWidget {
+  final List<Trivia> trivia;
+
+  const _BattlePage({required this.trivia});
+
+  @override
+  State<_BattlePage> createState() => _BattlePageState();
+}
+
+class _BattlePageState extends State<_BattlePage>
+    with TickerProviderStateMixin {
   late final Timer _battleTimer;
-  bool _battleTimerActive = true;
+  bool _battlePaused = false;
   final _battle = Battle();
-  final List<OverlayEntry> _overlayEntries = [];
   late AnimationController _visualTimerController;
   final List<bool> answers = [];
+  OverlayEntry? dangerOverlay;
 
   @override
   void initState() {
@@ -239,41 +264,46 @@ class _BattlePageState extends State<BattlePage> with TickerProviderStateMixin {
   @override
   void dispose() {
     _battleTimer.cancel();
-    _removeAllOverlays();
     _visualTimerController.dispose();
+    _disposeDangerIndicator();
     super.dispose();
   }
 
-  void _sendStats(bool winCheck) async {
+  BattleResult _battleResult() {
+    final playerWon = _battle.enemy.health <= 0;
     final correctAnswers = answers.where((correct) => correct).length;
     final totalAnswers = answers.length;
-
-    await Client().saveGame("t", winCheck, correctAnswers,
-        totalAnswers); //remember to replace "t" with username from token (token is not implemented yet)
+    return BattleResult(
+      playerWon: playerWon,
+      correctAnswers: correctAnswers,
+      totalAnswers: totalAnswers,
+    );
   }
 
-  void _battleTick() {
-    if (!_battleTimerActive) {
+  void _pauseBattle() {
+    _battlePaused = true;
+    _disposeDangerIndicator();
+  }
+
+  void _battleTick() async {
+    if (_battlePaused) {
       return;
     }
     final gameOver = _battle.enemy.health <= 0 || _battle.player.health <= 0;
     if (!gameOver) {
       setState(() => _battle.step());
-      _removeAllOverlays();
-      _dangerIndicator();
+      _showDangerIndicator();
       return;
     }
-    final playerWon = _battle.enemy.health <= 0;
-    if (playerWon) {
-      _sendStats(true);
-    } else {
-      _sendStats(false);
-    }
-    Navigator.of(context).pushReplacement(MaterialPageRoute(
-        builder: (context) => BattleResultPage(victory: playerWon)));
+    _pauseBattle();
+
+    final result = _battleResult();
+    await showBattleResult(context: context, playerWon: result.playerWon);
+    if (!mounted) return;
+    Navigator.of(context).pop(result);
   }
 
-  void saveAnswer(AnsweredQuestion result) {
+  void _saveAnswer(AnsweredQuestion result) {
     answers.add(result.correct);
   }
 
@@ -282,13 +312,13 @@ class _BattlePageState extends State<BattlePage> with TickerProviderStateMixin {
       return widget.trivia[Random().nextInt(widget.trivia.length)];
     }
 
-    _battleTimerActive = false;
+    _pauseBattle();
     final result =
         await showTriviaDialog(context: context, trivia: randomTrivia());
-    _battleTimerActive = true;
+    _battlePaused = false;
 
     if (result is AnsweredQuestion) {
-      saveAnswer(result);
+      _saveAnswer(result);
     }
 
     switch (result) {
@@ -301,98 +331,89 @@ class _BattlePageState extends State<BattlePage> with TickerProviderStateMixin {
     }
   }
 
-  void dangerOverlay() {
+  void _disposeDangerIndicator() {
+    dangerOverlay?.remove();
+    dangerOverlay = null;
+  }
+
+  void _showDangerIndicator() {
+    _disposeDangerIndicator();
+    if (_battle.playerTroops.isNotEmpty || _battle.enemyTroops.isEmpty) {
+      return;
+    }
     final overlay = Overlay.of(context);
-    final overlayEntry = OverlayEntry(
+    final entry = OverlayEntry(
       builder: (context) => IgnorePointer(
         ignoring: true,
         child: Container(
           decoration: BoxDecoration(
-            gradient: RadialGradient(
-              colors: [
-                Colors.transparent,
-                const Color.fromARGB(80, 255, 82, 82)
-              ],
-            ),
+            gradient: RadialGradient(colors: [
+              Colors.transparent,
+              const Color.fromARGB(80, 255, 82, 82)
+            ]),
           ),
         ),
       ),
     );
-
-    overlay.insert(overlayEntry);
-    _overlayEntries.add(overlayEntry);
-
-    if (_battle.playerTroops.isNotEmpty) {
-      overlayEntry.remove();
-      _overlayEntries.remove(overlayEntry);
-    }
-  }
-
-  void _dangerIndicator() {
-    if (_battle.enemyTroops.isNotEmpty && _battle.playerTroops.isEmpty) {
-      dangerOverlay();
-    }
-  }
-
-  void _removeAllOverlays() {
-    for (var overlayEntry in _overlayEntries) {
-      overlayEntry.remove();
-    }
-    _overlayEntries.clear();
+    overlay.insert(entry);
+    dangerOverlay = entry;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  ...<Widget>[
-                    _Base.fromBase(_battle.enemy, type: UnitType.enemy),
-                    Padding(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 25.0, vertical: 16.0),
-                      child: _TroopList(
-                        troops: _battle.enemyTroops,
-                        type: UnitType.enemy,
-                      ),
-                    ),
-                  ],
-                  Text("⚔️", style: TextStyle(fontSize: 32.0)),
-                  ...<Widget>[
-                    Padding(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 25.0, vertical: 16.0),
-                      child: _TroopList(
-                        troops: _battle.playerTroops,
-                        type: UnitType.player,
-                      ),
-                    ),
-                    _Base.fromBase(_battle.player, type: UnitType.player),
-                    ElevatedButton(
-                      onPressed: _addSoldier,
-                      child: Text("Add player soldier"),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            Align(
-              alignment: Alignment.topLeft,
-              child: Padding(
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        body: SafeArea(
+          child: Stack(
+            children: [
+              Padding(
                 padding: EdgeInsets.all(16.0),
-                child: CircularProgressIndicator(
-                  value: _visualTimerController.value,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    ...<Widget>[
+                      _Base.fromBase(_battle.enemy, type: UnitType.enemy),
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 25.0, vertical: 16.0),
+                        child: _TroopList(
+                          troops: _battle.enemyTroops,
+                          type: UnitType.enemy,
+                        ),
+                      ),
+                    ],
+                    Text("⚔️", style: TextStyle(fontSize: 32.0)),
+                    ...<Widget>[
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 25.0, vertical: 16.0),
+                        child: _TroopList(
+                          troops: _battle.playerTroops,
+                          type: UnitType.player,
+                        ),
+                      ),
+                      _Base.fromBase(_battle.player, type: UnitType.player),
+                      ElevatedButton(
+                        onPressed: _addSoldier,
+                        child: Text("Add player soldier"),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-            )
-          ],
+              Align(
+                alignment: Alignment.topLeft,
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: CircularProgressIndicator(
+                    value: _visualTimerController.value,
+                  ),
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );

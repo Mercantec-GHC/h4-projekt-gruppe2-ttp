@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mobile/battle/page.dart';
-import 'package:mobile/battle/trivia_dialog.dart';
+import 'package:mobile/battle/battle.dart';
+import 'package:mobile/battle/trivia.dart';
 import 'package:mobile/client.dart' as client;
 
 class _HomePage extends StatefulWidget {
@@ -127,20 +127,12 @@ class _BattlePage extends StatelessWidget {
         SizedBox(height: 16.0),
         FilledButton(
           onPressed: () async {
-            final trivia = await rootBundle
-                .loadString("assets/trivia_questions.json")
-                .then((content) => jsonDecode(content) as List<dynamic>)
-                .then((questions) => questions
-                    .map((trivia) => Trivia.fromJson(trivia))
-                    .toList());
-
-            if (!context.mounted) {
-              return;
-            }
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                  builder: (builder) => BattlePage(trivia: trivia)),
-            );
+            final trivia = await loadTrivia();
+            if (!context.mounted) return;
+            final result = await startBattle(context: context, trivia: trivia);
+            print(result.playerWon);
+            print(result.correctAnswers);
+            print(result.totalAnswers);
           },
           child: Padding(
             padding: EdgeInsets.all(16.0),
