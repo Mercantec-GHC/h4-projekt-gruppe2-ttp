@@ -18,9 +18,15 @@ class SharedPrefs implements Prefs {
   Future<String?> getToken() async {
     return inner.getString("token");
   }
+
+  @override
+  Future<void> removeToken() async {
+    await inner.remove("token");
+  }
 }
 
 abstract class Prefs {
   Future<void> setToken(String token);
   Future<String?> getToken();
+  Future<void> removeToken();
 }

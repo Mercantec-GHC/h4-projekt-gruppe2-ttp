@@ -11,10 +11,11 @@ class BattleResult {
   final int correctAnswers;
   final int totalAnswers;
 
-  const BattleResult(
-      {required this.won,
-      required this.correctAnswers,
-      required this.totalAnswers});
+  const BattleResult({
+    required this.won,
+    required this.correctAnswers,
+    required this.totalAnswers,
+  });
 }
 
 class _Healthbar extends StatelessWidget {

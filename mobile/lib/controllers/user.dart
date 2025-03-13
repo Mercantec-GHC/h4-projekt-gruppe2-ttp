@@ -1,37 +1,63 @@
+import 'package:flutter/material.dart';
 import 'package:mobile/client.dart';
 import 'package:mobile/prefs.dart';
+import 'package:mobile/result.dart';
 
-class User {
+class Session {
+  final User user;
   final String token;
-  final String name;
 
-  const User({required this.token, required this.name});
+  const Session({required this.user, required this.token});
 }
 
-class UsewContwowwer {
+class UserController extends ChangeNotifier {
   final Client client;
   final Prefs prefs;
+  Session? session;
 
-  const UsewContwowwer({required this.client, required this.prefs});
+  UserController({required this.client, required this.prefs}) {
+    _loadFromPrefs();
+  }
 
-  Future<ClientResult<Null>> login(String username, String password) async {
+  void _loadFromPrefs() async {
+    final token = await prefs.getToken();
+    if (token == null) {
+      return;
+    }
+    await startSessionWithToken(token);
+  }
+
+  Future<Result<Null>> login(String username, String password) async {
     final res = await client.login(username, password);
     switch (res) {
-      case SuccessResult<String>(data: final token):
-        return await loadUserFromToken(token);
-      case ErrorResult<String>(message: final message):
-        return ErrorResult(message: message);
+      case Success(data: final token):
+        return await startSessionWithToken(token);
+      case Error(message: final message):
+        return Error(message);
     }
   }
 
-  Future<ClientResult<Null>> loadUserFromToken(String token) async {
-    final res = await client.getUserStats(token);
+  Future<Result<Null>> saveStats(String token, InputStats stats) async {
+    final res = await client.saveGame(token, stats);
     switch (res) {
-      case SuccessResult(data: final user):
+      case Success():
+        return await startSessionWithToken(token);
+      case Error(message: final message):
+        return Error(message);
+    }
+  }
+
+  Future<Result<Null>> startSessionWithToken(String token) async {
+    final res = await client.getUserInfo(token);
+    switch (res) {
+      case Success(data: final user):
         await prefs.setToken(token);
-        return SuccessResult(data: null);
-      case ErrorResult(message: final message):
-        return ErrorResult(message: message);
+        session = Session(user: user, token: token);
+        notifyListeners();
+        return Success(null);
+      case Error(message: final message):
+        await prefs.removeToken();
+        return Error(message);
     }
   }
 }

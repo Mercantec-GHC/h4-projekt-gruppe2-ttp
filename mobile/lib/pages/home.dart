@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mobile/battle/battle.dart';
 import 'package:mobile/battle/trivia.dart';
 import 'package:mobile/client.dart' as client;
+import 'package:mobile/controllers/user.dart';
+import 'package:provider/provider.dart';
 
 class _HomePage extends StatefulWidget {
   const _HomePage();
@@ -11,104 +13,106 @@ class _HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<_HomePage> {
-  Map<String, dynamic>? _userStats;
+  client.User? user;
 
   @override
   void initState() {
     super.initState();
-    loadUserStats();
-  }
-
-  Future<void> loadUserStats() async {
-    final res = await client.Client().getUserStats(
-        "t"); //remember to replace "t" with username from token (token is not implemented yet)
-    if (res is client.SuccessResult<Map<String, dynamic>>) {
-      setState(() {
-        _userStats = res.data;
-      });
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return _userStats == null
+    return user == null
         ? Center(child: CircularProgressIndicator())
-        : Column(
-            children: [
-              RichText(
-                text: TextSpan(
-                  style: DefaultTextStyle.of(context).style,
-                  children: <TextSpan>[
-                    TextSpan(
-                        text: 'Velkommen, ', style: TextStyle(fontSize: 24.0)),
-                    TextSpan(
-                        text: '${_userStats?["username"]}',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 24.0)),
-                  ],
+        : Consumer<UserController>(builder: (ctx, controller, _) {
+            final user = controller.session!.user;
+            final stats = user.stats;
+            final wins = stats.wins;
+            final gamesPlayed = stats.gamesPlayed;
+            final losses = gamesPlayed - wins;
+            final correctnessRatio = stats.totalAnswers != 0
+                ? stats.correctAnswers / stats.totalAnswers
+                : 0;
+            return Column(
+              children: [
+                RichText(
+                  text: TextSpan(
+                    style: DefaultTextStyle.of(context).style,
+                    children: <TextSpan>[
+                      TextSpan(
+                          text: 'Velkommen, ',
+                          style: TextStyle(fontSize: 24.0)),
+                      TextSpan(
+                          text: user.username,
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 24.0)),
+                    ],
+                  ),
                 ),
-              ),
-              Divider(),
-              RichText(
-                text: TextSpan(
-                  style: DefaultTextStyle.of(context).style,
-                  children: <TextSpan>[
-                    TextSpan(
-                        text: 'Gange vundet: ',
-                        style: TextStyle(fontSize: 20.0)),
-                    TextSpan(
-                        text: '${_userStats?["wins"]}',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 20.0)),
-                    TextSpan(text: ' 👑', style: TextStyle(fontSize: 20.0)),
-                  ],
+                Divider(),
+                RichText(
+                  text: TextSpan(
+                    style: DefaultTextStyle.of(context).style,
+                    children: <TextSpan>[
+                      TextSpan(
+                          text: 'Gange vundet: ',
+                          style: TextStyle(fontSize: 20.0)),
+                      TextSpan(
+                          text: '$wins',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 20.0)),
+                      TextSpan(text: ' 👑', style: TextStyle(fontSize: 20.0)),
+                    ],
+                  ),
                 ),
-              ),
-              RichText(
-                text: TextSpan(
-                  style: DefaultTextStyle.of(context).style,
-                  children: <TextSpan>[
-                    TextSpan(
-                        text: 'Gange tabt: ', style: TextStyle(fontSize: 20.0)),
-                    TextSpan(
-                        text: '${_userStats?["lost"]}',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 20.0)),
-                    TextSpan(text: ' 😞', style: TextStyle(fontSize: 20.0)),
-                  ],
+                RichText(
+                  text: TextSpan(
+                    style: DefaultTextStyle.of(context).style,
+                    children: <TextSpan>[
+                      TextSpan(
+                          text: 'Gange tabt: ',
+                          style: TextStyle(fontSize: 20.0)),
+                      TextSpan(
+                          text: '$losses',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 20.0)),
+                      TextSpan(text: ' 😞', style: TextStyle(fontSize: 20.0)),
+                    ],
+                  ),
                 ),
-              ),
-              RichText(
-                text: TextSpan(
-                  style: DefaultTextStyle.of(context).style,
-                  children: <TextSpan>[
-                    TextSpan(
-                        text: 'Spil i alt: ', style: TextStyle(fontSize: 20.0)),
-                    TextSpan(
-                        text: '${_userStats?["games_played"]}',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 20.0)),
-                    TextSpan(text: ' ⚔️', style: TextStyle(fontSize: 20.0)),
-                  ],
+                RichText(
+                  text: TextSpan(
+                    style: DefaultTextStyle.of(context).style,
+                    children: <TextSpan>[
+                      TextSpan(
+                          text: 'Spil i alt: ',
+                          style: TextStyle(fontSize: 20.0)),
+                      TextSpan(
+                          text: '$gamesPlayed',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 20.0)),
+                      TextSpan(text: ' ⚔️', style: TextStyle(fontSize: 20.0)),
+                    ],
+                  ),
                 ),
-              ),
-              RichText(
-                text: TextSpan(
-                  style: DefaultTextStyle.of(context).style,
-                  children: <TextSpan>[
-                    TextSpan(
-                        text: 'Korrekte svar: ',
-                        style: TextStyle(fontSize: 20.0)),
-                    TextSpan(
-                        text: '${_userStats?["correctness"]}%',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 20.0)),
-                    TextSpan(text: ' ✅', style: TextStyle(fontSize: 20.0)),
-                  ],
+                RichText(
+                  text: TextSpan(
+                    style: DefaultTextStyle.of(context).style,
+                    children: <TextSpan>[
+                      TextSpan(
+                          text: 'Korrekte svar: ',
+                          style: TextStyle(fontSize: 20.0)),
+                      TextSpan(
+                          text: '${correctnessRatio * 100}%',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 20.0)),
+                      TextSpan(text: ' ✅', style: TextStyle(fontSize: 20.0)),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          );
+              ],
+            );
+          });
   }
 }
 
@@ -125,13 +129,25 @@ class _BattlePage extends StatelessWidget {
         FilledButton(
           onPressed: () async {
             final trivia = await loadTrivia();
+
             if (!context.mounted) return;
             final result = await startBattle(context: context, trivia: trivia);
-            await client.Client().saveGame(
-              "t",
-              won: result.won,
-              totalAnswers: result.totalAnswers,
-              correctAnswers: result.correctAnswers,
+
+            if (!context.mounted) return;
+            final controller = context.read<UserController>();
+            final session = controller.session;
+            if (session == null) {
+              Navigator.of(context).pop();
+              return;
+            }
+
+            controller.saveStats(
+              session.token,
+              client.InputStats(
+                correctAnswers: result.correctAnswers,
+                totalAnswers: result.totalAnswers,
+                won: result.won,
+              ),
             );
           },
           child: Padding(

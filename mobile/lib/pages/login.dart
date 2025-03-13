@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/client.dart';
+import 'package:mobile/controllers/user.dart';
 import 'package:mobile/pages/home.dart';
 import 'package:mobile/logo.dart';
 import 'package:mobile/pages/register.dart';
+import 'package:mobile/result.dart';
+import 'package:provider/provider.dart';
 
 sealed class _LoginPageStatus {}
 
@@ -28,13 +31,17 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
     setState(() => _status = _Ready());
     switch (response) {
-      case SuccessResult(data: final _):
+      case Success(data: final token):
+        await context.read<UserController>().startSessionWithToken(token);
+
+        if (!mounted) return;
+
         final snackBar = SnackBar(content: Text("Logged ind!"));
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => HomeNavigation()));
+        Navigator.of(context)
+            .push(MaterialPageRoute(builder: (_) => HomeNavigation()));
         return;
-      case ErrorResult(message: final message):
+      case Error(message: final message):
         final snackBar = SnackBar(content: Text(message));
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         return;
@@ -42,13 +49,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   _gotoRegister() {
-    Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => RegisterPage()));
-  }
-
-  _bypassLogin() {
     Navigator.of(context)
-        .pushReplacement(MaterialPageRoute(builder: (_) => HomeNavigation()));
+        .push(MaterialPageRoute(builder: (context) => RegisterPage()));
   }
 
   @override
@@ -121,10 +123,6 @@ class _LoginPageState extends State<LoginPage> {
                     ],
                   ),
                 ),
-              ),
-              OutlinedButton(
-                onPressed: _bypassLogin,
-                child: Text("bypass login 😈🙏"),
               ),
             ]),
           ),

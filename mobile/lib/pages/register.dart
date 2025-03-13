@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile/pages/login.dart';
 import 'package:mobile/logo.dart';
 import 'package:mobile/client.dart';
+import 'package:mobile/result.dart';
 
 sealed class _RegisterPageStatus {}
 
@@ -27,13 +28,13 @@ class _RegisterPageState extends State<RegisterPage> {
     if (!mounted) return;
     setState(() => _status = _Ready());
     switch (response) {
-      case SuccessResult<Null>():
+      case Success():
         final snackBar = SnackBar(content: Text("Bruger oprettet!"));
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         Navigator.of(context)
-            .pushReplacement(MaterialPageRoute(builder: (_) => LoginPage()));
+            .pop(MaterialPageRoute(builder: (_) => LoginPage()));
         return;
-      case ErrorResult<Null>(message: final message):
+      case Error(message: final message):
         final snackBar = SnackBar(content: Text(message));
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         return;
@@ -42,7 +43,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   _gotoLogin() {
     Navigator.of(context)
-        .pushReplacement(MaterialPageRoute(builder: (context) => LoginPage()));
+        .pop(MaterialPageRoute(builder: (context) => LoginPage()));
   }
 
   @override
