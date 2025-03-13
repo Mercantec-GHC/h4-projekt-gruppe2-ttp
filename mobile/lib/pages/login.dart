@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/client.dart';
-import 'package:mobile/home_page.dart';
+import 'package:mobile/pages/home.dart';
 import 'package:mobile/logo.dart';
-import 'package:mobile/register_page.dart';
+import 'package:mobile/pages/register.dart';
 
 sealed class _LoginPageStatus {}
 

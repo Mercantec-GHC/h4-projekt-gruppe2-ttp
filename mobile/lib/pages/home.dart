@@ -1,7 +1,4 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:mobile/battle/battle.dart';
 import 'package:mobile/battle/trivia.dart';
 import 'package:mobile/client.dart' as client;

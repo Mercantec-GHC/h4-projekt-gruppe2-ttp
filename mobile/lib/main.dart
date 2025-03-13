@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/login_page.dart';
+import 'package:mobile/pages/login.dart';
 import 'package:mobile/prefs.dart';
 
 void main() async {

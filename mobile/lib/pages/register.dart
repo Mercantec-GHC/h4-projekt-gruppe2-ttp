@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/login_page.dart';
+import 'package:mobile/pages/login.dart';
 import 'package:mobile/logo.dart';
 import 'package:mobile/client.dart';
 
