@@ -1,6 +1,6 @@
 import * as oak from "jsr:@oak/oak";
 import { oakCors } from "https://deno.land/x/cors@v1.2.2/mod.ts";
-import { Db, Token, token } from "./db.ts";
+import { Db, Stats, Token, token } from "./db.ts";
 import { MariaDb } from "./mariadbConnect.ts";
 import { err, ok, Result } from "jsr:@result/result";
 import { HashedPassword } from "./hashed_password.ts";
@@ -19,7 +19,7 @@ interface UserInfoRequest {
   token: string;
 }
 
-interface SaveStatsRequest {
+interface SaveGameRequest {
   token: string;
   stats: InputStats;
 }
@@ -40,7 +40,6 @@ type OutputStats = {
 type User = {
   id: string;
   username: string;
-  password: string;
   stats: OutputStats | null;
 };
 
@@ -92,12 +91,24 @@ async function getUser(
   }
 }
 
-async function saveUserStats(
+async function saveGame(
   db: Db,
   stats: InputStats,
   userId: string,
 ): Promise<Result<void, string>> {
-  const res = await db.saveUserStats(userId, stats);
+  const existing: Stats = await db.userStats(userId) ?? {
+    games_played: 0,
+    wins: 0,
+    total_answers: 0,
+    correct_answers: 0,
+  };
+
+  existing.games_played += 1;
+  existing.wins += stats.won ? 1 : 0;
+  existing.total_answers += stats.total_answers;
+  existing.correct_answers += stats.correct_answers;
+
+  const res = await db.upsertGame(userId, existing);
 
   if (res == null) {
     return ok();
@@ -177,15 +188,15 @@ async function main() {
       );
   });
 
-  router.post("/saveStats", async (ctx) => {
-    const req: SaveStatsRequest = await ctx.request.body.json();
+  router.post("/saveGame", async (ctx) => {
+    const req: SaveGameRequest = await ctx.request.body.json();
     const token = tokens.find((v) => v.value === req.token);
     if (!token) {
       ctx.response.body = { ok: false, message: "Invalid token" };
       return;
     }
 
-    (await saveUserStats(db, req.stats, token.user)).match(
+    (await saveGame(db, req.stats, token.user)).match(
       (_: void) => {
         ctx.response.body = { ok: true, message: "Success" };
       },

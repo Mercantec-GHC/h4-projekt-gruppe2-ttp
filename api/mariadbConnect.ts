@@ -1,4 +1,4 @@
-import { Db, InputStats, Stats, User, uuid } from "./db.ts";
+import { Db, Stats, User, uuid } from "./db.ts";
 import { HashedPassword } from "./hashed_password.ts";
 import {
   Client,
@@ -101,32 +101,32 @@ export class MariaDb implements Db {
     return stats;
   }
 
-  public async saveUserStats(
+  public async upsertGame(
     userId: string,
-    stats: InputStats,
+    stats: Stats,
   ): Promise<null> {
-    let current = await this.userStats(userId);
-
-    if (current == null) {
+    const exists = this.userStats(userId) !== null;
+    if (!exists) {
       await this.connection.execute(
-        "INSERT INTO user_stats(user_id, correct_answers, total_answers, wins, games_played) VALUES(?, 0, 0, 0, 0)",
-        [userId],
+        "INSERT INTO user_stats(user_id, correct_answers, total_answers, wins, games_played) VALUES(?, ?, ?, ?, ?)",
+        [
+          userId,
+          stats.correct_answers,
+          stats.total_answers,
+          stats.wins,
+          stats.games_played,
+        ],
       );
-      current = {
-        total_answers: 0,
-        correct_answers: 0,
-        games_played: 0,
-        wins: 0,
-      };
+      return null;
     }
 
     await this.connection.execute(
       "UPDATE user_stats SET correct_answers = ?, total_answers = ?, wins = ?, games_played = ? WHERE user_id = ?",
       [
-        current.correct_answers + stats.correct_answers,
-        current.total_answers + stats.total_answers,
-        current.wins + (stats.won ? 1 : 0),
-        current.games_played + 1,
+        stats.correct_answers,
+        stats.total_answers,
+        stats.wins,
+        stats.games_played,
         userId,
       ],
     );

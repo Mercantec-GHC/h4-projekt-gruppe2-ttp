@@ -14,12 +14,6 @@ export type Stats = {
   games_played: number;
 };
 
-export type InputStats = {
-  won: boolean;
-  correct_answers: number;
-  total_answers: number;
-};
-
 export type Questions = {
   question: string;
   difficulty: number;
@@ -48,5 +42,5 @@ export interface Db {
   userFromUsername(username: string): Promise<User | null>;
   user(userId: string): Promise<User | null>;
   userStats(userId: string): Promise<Stats | null>;
-  saveUserStats(userId: string, stats: InputStats): Promise<null>;
+  upsertGame(userId: string, stats: Stats): Promise<null>;
 }
