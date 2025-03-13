@@ -157,8 +157,8 @@ router.post("/getstats", async (ctx) => {
 
   (await getUserStats(await MariaDb.connect(), await req.username))
     .match(
-      (ok: OutputStats) => {
-        ctx.response.body = { ok: true, message: "Success", stats: ok };
+      (stats: OutputStats) => {
+        ctx.response.body = { ok: true, message: "Success", stats };
       },
       (err: string) => {
         ctx.response.body = { ok: false, message: err };
