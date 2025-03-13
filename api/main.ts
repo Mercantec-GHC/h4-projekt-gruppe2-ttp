@@ -15,6 +15,15 @@ interface LoginRequest {
   password: string;
 }
 
+interface GetStatsRequest {
+  token: string;
+}
+
+interface SaveStatsRequest {
+  token: string;
+  stats: InputStats;
+}
+
 interface InputStats {
   won: boolean;
   correct_answers: number;
@@ -33,10 +42,10 @@ async function createUser(
   db: Db,
   req: RegisterRequest,
 ): Promise<Result<void, string>> {
-  const existingUser = await db.userFromName(req.username);
+  const existingUser = await db.user(req.username);
 
   if (existingUser !== null) {
-    return err("User alreay exists");
+    return err("User already exists");
   }
 
   db.createUser(req.username, await HashedPassword.hash(req.password));
@@ -47,7 +56,7 @@ async function login(
   db: Db,
   req: LoginRequest,
 ): Promise<Result<Token, string>> {
-  const existingUser = await db.userFromName(req.username);
+  const existingUser = await db.user(req.username);
 
   if (existingUser === null) {
     return err("No user found");
@@ -57,6 +66,7 @@ async function login(
     unhashed: req.password,
     hashed: existingUser.password,
   });
+
   if (!valid) {
     return err("Incorrect password");
   }
@@ -67,7 +77,7 @@ async function getUserStats(
   db: Db,
   req: string,
 ): Promise<Result<OutputStats, string>> {
-  const userStats = await db.getUserStats(req);
+  const userStats = await db.userStats(req);
 
   if (userStats != null) {
     return ok(userStats);
@@ -92,112 +102,112 @@ async function saveUserStats(
 
 const port = 8000;
 
-const router = new oak.Router();
+async function main() {
+  const router = new oak.Router();
+  const db: Db = await MariaDb.connect();
+  const tokens: Token[] = [];
 
-router.post("/createUser", async (ctx) => {
-  const req: RegisterRequest = await ctx.request.body.json();
+  router.post("/createUser", async (ctx) => {
+    const req: RegisterRequest = await ctx.request.body.json();
 
-  if (!req.username || !req.password) {
-    ctx.response.body = {
-      ok: false,
-      message: "Please fill out all fields",
-    };
-    return;
-  }
-
-  const res = (await createUser(await MariaDb.connect(), req)).match(
-    (_ok: void) => ({ ok: true, message: "Success" }),
-    (err: string) => ({ ok: false, message: err }),
-  );
-
-  ctx.response.body = res;
-});
-
-router.post("/login", async (ctx) => {
-  const req: LoginRequest = await ctx.request.body.json();
-
-  if (!req.username || !req.password) {
-    ctx.response.body = {
-      ok: false,
-      message: "Please fill out all fields",
-    };
-    return;
-  }
-
-  (await login(await MariaDb.connect(), req)).match(
-    async (token) => {
-      await ctx.cookies.set("token", token.value, {
-        httpOnly: true,
-        secure: false,
-        overwrite: true,
-        signed: false,
-        sameSite: "lax",
-        ignoreInsecure: true,
-      });
+    if (!req.username || !req.password) {
       ctx.response.body = {
-        ok: true,
-        message: "Success",
-        token: token.value,
+        ok: false,
+        message: "Please fill out all fields",
       };
-    },
-    async (err) => {
-      await Promise.resolve();
-      ctx.response.body = { ok: false, message: err };
-    },
-  );
-});
+      return;
+    }
 
-router.post("/getstats", async (ctx) => {
-  const req = await ctx.request.body.json();
-  if (req == null) {
-    ctx.response.body = { ok: false, message: "Missing content" };
-    return;
-  }
+    const res = (await createUser(db, req)).match(
+      (_: void) => ({ ok: true, message: "Success" }),
+      (err: string) => ({ ok: false, message: err }),
+    );
 
-  (await getUserStats(await MariaDb.connect(), await req.username))
-    .match(
-      (stats: OutputStats) => {
-        ctx.response.body = { ok: true, message: "Success", stats };
+    ctx.response.body = res;
+  });
+
+  router.post("/login", async (ctx) => {
+    const req: LoginRequest = await ctx.request.body.json();
+
+    if (!req.username || !req.password) {
+      ctx.response.body = {
+        ok: false,
+        message: "Please fill out all fields",
+      };
+      return;
+    }
+
+    (await login(db, req)).match(
+      (token) => {
+        tokens.push(token);
+        ctx.response.body = {
+          ok: true,
+          message: "Success",
+          token: token.value,
+        };
+      },
+      (err) => {
+        ctx.response.body = { ok: false, message: err };
+      },
+    );
+  });
+
+  router.post("/getStats", async (ctx) => {
+    const req: GetStatsRequest = await ctx.request.body.json();
+    const token = tokens.find((v) => v.value === req.token);
+    if (!token) {
+      ctx.response.body = { ok: false, message: "Invalid token" };
+      return;
+    }
+
+    (await getUserStats(db, token.user))
+      .match(
+        (stats: OutputStats) => {
+          ctx.response.body = { ok: true, message: "Success", stats };
+        },
+        (err: string) => {
+          ctx.response.body = { ok: false, message: err };
+        },
+      );
+  });
+
+  router.post("/saveStats", async (ctx) => {
+    const req: SaveStatsRequest = await ctx.request.body.json();
+    const token = tokens.find((v) => v.value === req.token);
+    if (!token) {
+      ctx.response.body = { ok: false, message: "Invalid token" };
+      return;
+    }
+
+    (await saveUserStats(db, req.stats, token.user)).match(
+      (_ok: string) => {
+        ctx.response.body = { ok: true, message: "success" };
       },
       (err: string) => {
         ctx.response.body = { ok: false, message: err };
       },
     );
-});
+  });
 
-router.post("/savestats/:user", async (ctx) => {
-  const cookie = await ctx.cookies.get("token");
-  console.log(cookie);
+  const app = new oak.Application();
+  app.use(oakCors({ credentials: true, origin: "http://localhost:8000" }));
+  app.use(router.routes());
+  app.use(router.allowedMethods());
+  app.use(async (ctx, next) => {
+    try {
+      await ctx.send({ root: "./public", index: "index.html" });
+    } catch {
+      next();
+    }
+  });
 
-  const user = ctx.params.user;
-  const req = await ctx.request.body.json();
-  if (req == null) {
-    ctx.response.body = { ok: true, message: "Unknown request" };
-    return;
-  }
-
-  (await saveUserStats(await MariaDb.connect(), req, user)).match(
-    (_ok: string) => {
-      ctx.response.body = { ok: true, message: "success" };
-    },
-    (err: string) => {
-      ctx.response.body = { ok: false, message: err };
-    },
+  app.addEventListener(
+    "listen",
+    ({ port }) =>
+      console.log(`*bip bop, backend er i top* http://localhost:${port}/`),
   );
-});
 
-const app = new oak.Application();
-app.use(oakCors({ credentials: true, origin: "http://localhost:8000" }));
-app.use(router.routes());
-app.use(router.allowedMethods());
-app.use(async (ctx, next) => {
-  try {
-    await ctx.send({ root: "./public", index: "index.html" });
-  } catch {
-    next();
-  }
-});
+  await app.listen({ port });
+}
 
-const listener = app.listen({ port });
-console.log(`*bip bop, backend er i top* http://localhost:${port}/`);
-await listener;
+await main();

@@ -2,7 +2,7 @@ import { HashedPassword } from "./hashed_password.ts";
 
 export type User = {
   id: string;
-  name: string;
+  username: string;
   password: string;
 };
 
@@ -45,7 +45,7 @@ export function token(user: User["id"]): Token {
 
 export interface Db {
   createUser(username: string, password: HashedPassword): Promise<null>;
-  userFromName(username: string): Promise<User | null>;
-  getUserStats(username: string): Promise<OutputStats | null>;
-  saveUserStats(username: string, stats: InputStats): Promise<null>;
+  user(userId: string): Promise<User | null>;
+  userStats(userId: string): Promise<OutputStats | null>;
+  saveUserStats(userId: string, stats: InputStats): Promise<null>;
 }
