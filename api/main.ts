@@ -1,6 +1,6 @@
 import * as oak from "jsr:@oak/oak";
 import { oakCors } from "https://deno.land/x/cors@v1.2.2/mod.ts";
-import { Db, Token, token, User } from "./db.ts";
+import { Db, Token, token } from "./db.ts";
 import { MariaDb } from "./mariadbConnect.ts";
 import { err, ok, Result } from "jsr:@result/result";
 import { HashedPassword } from "./hashed_password.ts";
@@ -35,6 +35,13 @@ type OutputStats = {
   total_answers: number;
   wins: number;
   games_played: number;
+};
+
+type User = {
+  id: string;
+  username: string;
+  password: string;
+  stats: OutputStats | null;
 };
 
 async function createUser(
@@ -89,11 +96,11 @@ async function saveUserStats(
   db: Db,
   stats: InputStats,
   userId: string,
-): Promise<Result<string, string>> {
+): Promise<Result<void, string>> {
   const res = await db.saveUserStats(userId, stats);
 
   if (res == null) {
-    return ok("Success");
+    return ok();
   } else {
     return err("Something went wrong");
   }
@@ -179,8 +186,8 @@ async function main() {
     }
 
     (await saveUserStats(db, req.stats, token.user)).match(
-      (_ok: string) => {
-        ctx.response.body = { ok: true, message: "success" };
+      (_: void) => {
+        ctx.response.body = { ok: true, message: "Success" };
       },
       (err: string) => {
         ctx.response.body = { ok: false, message: err };
