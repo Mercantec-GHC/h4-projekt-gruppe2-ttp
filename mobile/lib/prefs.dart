@@ -10,17 +10,17 @@ class SharedPrefs implements Prefs {
   }
 
   @override
-  void setCookie(String token) async {
+  Future<void> setToken(String token) async {
     await inner.setString("token", token);
   }
 
   @override
-  Future<String?> getCookie() async {
+  Future<String?> getToken() async {
     return inner.getString("token");
   }
 }
 
 abstract class Prefs {
-  void setCookie(String token);
-  Future<String?> getCookie();
+  Future<void> setToken(String token);
+  Future<String?> getToken();
 }
