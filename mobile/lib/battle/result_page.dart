@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 Future showBattleResult(
-    {required BuildContext context, required bool playerWon}) async {
+    {required BuildContext context, required bool won}) async {
   final value = await Navigator.push(
     context,
     MaterialPageRoute(
       builder: (context) => _BattleResultPage(
-        playerWon: playerWon,
+        won: won,
       ),
     ),
   );
@@ -18,10 +18,10 @@ Future showBattleResult(
 
 class _BattleResultPage extends StatelessWidget {
   const _BattleResultPage({
-    required this.playerWon,
+    required this.won,
   });
 
-  final bool playerWon;
+  final bool won;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +35,7 @@ class _BattleResultPage extends StatelessWidget {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: playerWon
+                  color: won
                       ? ColorScheme.of(context).primary
                       : ColorScheme.of(context).error,
                   borderRadius: BorderRadius.circular(8.0),
@@ -44,13 +44,13 @@ class _BattleResultPage extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Text(
-                    playerWon
+                    won
                         ? "Vinder, vinder, kyllinge aftensmad 😁👍"
                         : "Du tabte, womp womp ☹️👎",
                     style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: playerWon
+                        color: won
                             ? ColorScheme.of(context).onPrimary
                             : ColorScheme.of(context).onError),
                   ),

@@ -7,12 +7,12 @@ import 'package:mobile/battle/result_page.dart';
 import 'package:mobile/battle/trivia.dart';
 
 class BattleResult {
-  final bool playerWon;
+  final bool won;
   final int correctAnswers;
   final int totalAnswers;
 
   const BattleResult(
-      {required this.playerWon,
+      {required this.won,
       required this.correctAnswers,
       required this.totalAnswers});
 }
@@ -270,11 +270,11 @@ class _BattlePageState extends State<_BattlePage>
   }
 
   BattleResult _battleResult() {
-    final playerWon = _battle.enemy.health <= 0;
+    final won = _battle.enemy.health <= 0;
     final correctAnswers = answers.where((correct) => correct).length;
     final totalAnswers = answers.length;
     return BattleResult(
-      playerWon: playerWon,
+      won: won,
       correctAnswers: correctAnswers,
       totalAnswers: totalAnswers,
     );
@@ -298,7 +298,7 @@ class _BattlePageState extends State<_BattlePage>
     _pauseBattle();
 
     final result = _battleResult();
-    await showBattleResult(context: context, playerWon: result.playerWon);
+    await showBattleResult(context: context, won: result.won);
     if (!mounted) return;
     Navigator.of(context).pop(result);
   }

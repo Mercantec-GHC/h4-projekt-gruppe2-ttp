@@ -130,9 +130,12 @@ class _BattlePage extends StatelessWidget {
             final trivia = await loadTrivia();
             if (!context.mounted) return;
             final result = await startBattle(context: context, trivia: trivia);
-            print(result.playerWon);
-            print(result.correctAnswers);
-            print(result.totalAnswers);
+            await client.Client().saveGame(
+              "t",
+              won: result.won,
+              totalAnswers: result.totalAnswers,
+              correctAnswers: result.correctAnswers,
+            );
           },
           child: Padding(
             padding: EdgeInsets.all(16.0),

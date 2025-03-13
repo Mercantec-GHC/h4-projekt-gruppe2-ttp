@@ -50,12 +50,16 @@ class Client {
   }
 
   Future<ClientResult<Null>> saveGame(
-      String username, bool won, int correctanswers, int totalanswers) async {
+    String username, {
+    required bool won,
+    required int correctAnswers,
+    required int totalAnswers,
+  }) async {
     final body = json.encode({
       "username": username,
       "won": won,
-      "correctanswers": correctanswers,
-      "totalanswers": totalanswers
+      "correctanswers": correctAnswers,
+      "totalanswers": totalAnswers
     });
 
     var res = await http.post(Uri.parse("$apiUrl/savestats/$username"),
