@@ -1,12 +1,13 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPrefs implements Prefs {
-  final SharedPreferences inner;
+  final SharedPreferencesAsync inner;
 
   const SharedPrefs(this.inner);
 
   static Future<Prefs> loadPrefs() async {
-    return SharedPrefs(await SharedPreferences.getInstance());
+    return SharedPrefs(
+        SharedPreferencesAsync(options: SharedPreferencesOptions()));
   }
 
   @override
@@ -16,7 +17,7 @@ class SharedPrefs implements Prefs {
 
   @override
   Future<String?> getToken() async {
-    return inner.getString("token");
+    return await inner.getString("token");
   }
 
   @override
