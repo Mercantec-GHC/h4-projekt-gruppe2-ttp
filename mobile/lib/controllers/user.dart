@@ -27,6 +27,10 @@ class UserController extends ChangeNotifier {
     await refreshSessionWithToken(token);
   }
 
+  Future<Result<Null>> register(String username, String password) async {
+    return await client.register(username, password);
+  }
+
   Future<Result<Null>> login(String username, String password) async {
     final res = await client.login(username, password);
     switch (res) {

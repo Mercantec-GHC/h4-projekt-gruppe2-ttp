@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/controllers/user.dart';
 import 'package:mobile/pages/login.dart';
 import 'package:mobile/logo.dart';
-import 'package:mobile/client.dart';
 import 'package:mobile/result.dart';
+import 'package:provider/provider.dart';
 
 sealed class _RegisterPageStatus {}
 
@@ -24,15 +25,15 @@ class _RegisterPageState extends State<RegisterPage> {
 
   _registerPressed(String username, String password) async {
     setState(() => _status = _Loading());
-    final response = await Client().register(username, password);
+    final response =
+        await context.read<UserController>().login(username, password);
     if (!mounted) return;
     setState(() => _status = _Ready());
     switch (response) {
       case Ok():
         final snackBar = SnackBar(content: Text("Bruger oprettet!"));
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        Navigator.of(context)
-            .pop(MaterialPageRoute(builder: (_) => LoginPage()));
+        Navigator.of(context).pop();
         return;
       case Err(message: final message):
         final snackBar = SnackBar(content: Text(message));
