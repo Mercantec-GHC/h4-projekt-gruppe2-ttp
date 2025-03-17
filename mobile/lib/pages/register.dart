@@ -26,7 +26,7 @@ class _RegisterPageState extends State<RegisterPage> {
   _registerPressed(String username, String password) async {
     setState(() => _status = _Loading());
     final response =
-        await context.read<UserController>().login(username, password);
+        await context.read<UserController>().register(username, password);
     if (!mounted) return;
     setState(() => _status = _Ready());
     switch (response) {

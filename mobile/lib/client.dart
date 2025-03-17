@@ -39,7 +39,7 @@ class Stats {
 }
 
 class Client {
-  final String apiUrl = "http://127.0.0.1:8000";
+  final String apiUrl = "http://10.135.51.101:8000";
 
   Future<Result<String>> login(String username, String password) async {
     final body = json.encode({"username": username, "password": password});
