@@ -59,8 +59,10 @@ Troop _randomTroop() {
 class Battle {
   final Base enemy = Base(name: randomEnemyName(), health: 10);
   final Base player = Base(name: "Dig", health: 10);
-  final Queue<Troop> _enemyTroops = ListQueue();
-  final Queue<Troop> _playerTroops = ListQueue();
+  final Queue<Troop> _enemyTroops = ListQueue()
+    ..add(Troop(name: randomTroopName(), health: 10, damage: 1));
+  final Queue<Troop> _playerTroops = ListQueue()
+    ..add(Troop(name: randomTroopName(), health: 10, damage: 1));
 
   List<Troop> get enemyTroops => UnmodifiableListView(_enemyTroops);
   List<Troop> get playerTroops => UnmodifiableListView(_playerTroops);

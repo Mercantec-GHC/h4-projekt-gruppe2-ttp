@@ -84,7 +84,7 @@ class _StatsPage extends StatelessWidget {
                             style: TextStyle(fontSize: 20.0)),
                         TextSpan(
                             text:
-                                '${(stats.totalAnswers != 0 ? stats.correctAnswers / stats.totalAnswers : 0) * 100}%',
+                                '${((stats.totalAnswers != 0 ? stats.correctAnswers / stats.totalAnswers : 0) * 100).round()}%',
                             style: TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 20.0)),
                         TextSpan(text: ' ✅', style: TextStyle(fontSize: 20.0)),

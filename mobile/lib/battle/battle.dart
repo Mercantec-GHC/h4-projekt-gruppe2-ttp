@@ -241,31 +241,54 @@ class _BattlePage extends StatefulWidget {
 class _BattlePageState extends State<_BattlePage>
     with TickerProviderStateMixin {
   late final Timer _battleTimer;
+  bool cooldown = false;
   bool _battlePaused = false;
   final _battle = Battle();
   late AnimationController _visualTimerController;
+  late AnimationController _cooldownTimer;
   final List<bool> answers = [];
   OverlayEntry? dangerOverlay;
+  int countdown = 3;
+
+  void startTimer() {
+    Timer.periodic(const Duration(seconds: 1), (timer) {
+      countdown--;
+
+      if (countdown == 0) {
+        final battleTick = Duration(seconds: 1);
+        _battleTimer = Timer.periodic(battleTick, (_) => _battleTick());
+        _visualTimerController
+          ..duration = battleTick
+          ..addListener(() {
+            setState(() {});
+          })
+          ..repeat(period: battleTick);
+        timer.cancel();
+      }
+    });
+  }
 
   @override
   void initState() {
-    final battleTick = Duration(seconds: 1);
-    _battleTimer = Timer.periodic(battleTick, (_) => _battleTick());
+    super.initState();
     _visualTimerController = AnimationController(
       vsync: this,
-      duration: battleTick,
-    )
-      ..addListener(() {
-        setState(() {});
-      })
-      ..repeat(period: battleTick);
-    super.initState();
+      duration: const Duration(seconds: 1),
+    );
+    _cooldownTimer =
+        AnimationController(vsync: this, duration: const Duration(seconds: 5))
+          ..addListener(() {
+            setState(() {});
+          })
+          ..repeat();
+    startTimer();
   }
 
   @override
   void dispose() {
     _battleTimer.cancel();
     _visualTimerController.dispose();
+    _cooldownTimer.dispose();
     _disposeDangerIndicator();
     super.dispose();
   }
@@ -321,6 +344,8 @@ class _BattlePageState extends State<_BattlePage>
     if (result is AnsweredQuestion) {
       _saveAnswer(result);
     }
+
+    Timer(Duration(seconds: 5), () => cooldown = false);
 
     switch (result) {
       case AnsweredQuestion(correct: true):
@@ -397,8 +422,23 @@ class _BattlePageState extends State<_BattlePage>
                       ),
                       _Base.fromBase(_battle.player, type: UnitType.player),
                       ElevatedButton(
-                        onPressed: _addSoldier,
-                        child: Text("Add player soldier"),
+                        onPressed: () {
+                          if (countdown > 0) {
+                            return;
+                          }
+                          {
+                            if (!cooldown) {
+                              _addSoldier();
+                              cooldown = true;
+                            }
+                          }
+                          cooldown
+                              ? CircularProgressIndicator(
+                                  value: _cooldownTimer.value,
+                                )
+                              : Text("Add player soldier");
+                        },
+                        child: null,
                       ),
                     ],
                   ],
@@ -412,7 +452,20 @@ class _BattlePageState extends State<_BattlePage>
                     value: _visualTimerController.value,
                   ),
                 ),
-              )
+              ),
+              if (countdown > 0)
+                Container(
+                  color: ColorScheme.of(context).primary,
+                  child: Center(
+                    child: Text(
+                      "Kampen starter om $countdown...",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 48,
+                          color: ColorScheme.of(context).onPrimary),
+                    ),
+                  ),
+                )
             ],
           ),
         ),
