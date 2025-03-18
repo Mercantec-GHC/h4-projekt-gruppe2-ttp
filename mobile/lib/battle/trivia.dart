@@ -391,7 +391,7 @@ class _AnswersScreen extends StatelessWidget {
                 ),
                 _answerColumn(
                   top: answers.topRight,
-                  bottom: answers.topRight,
+                  bottom: answers.bottomRight,
                   highlighted: ptr.x > 0,
                 ),
               ],
