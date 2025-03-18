@@ -240,61 +240,53 @@ class _BattlePage extends StatefulWidget {
 
 class _BattlePageState extends State<_BattlePage>
     with TickerProviderStateMixin {
-  late final Timer _battleTimer;
+  final battle = Battle();
+  late final Timer battleTimer;
+  bool battlePaused = false;
+  late AnimationController battleTickAnimator;
   bool cooldown = false;
-  bool _battlePaused = false;
-  final _battle = Battle();
-  late AnimationController _visualTimerController;
-  late AnimationController _cooldownTimer;
+  late AnimationController cooldownAnimator;
   final List<bool> answers = [];
   OverlayEntry? dangerOverlay;
   int countdown = 3;
 
-  void startTimer() {
-    Timer.periodic(const Duration(seconds: 1), (timer) {
-      countdown--;
+  void startCountdown() {
+    void countdownTick(Timer timer) {
+      setState(() => countdown--);
+      if (countdown > 0) return;
+      final battleTickDuration = Duration(seconds: 1);
+      battleTimer = Timer.periodic(battleTickDuration, (_) => battleTick());
+      battleTickAnimator
+        ..addListener(() => setState(() {}))
+        ..repeat(period: battleTickDuration);
+      timer.cancel();
+    }
 
-      if (countdown == 0) {
-        final battleTick = Duration(seconds: 1);
-        _battleTimer = Timer.periodic(battleTick, (_) => _battleTick());
-        _visualTimerController
-          ..duration = battleTick
-          ..addListener(() {
-            setState(() {});
-          })
-          ..repeat(period: battleTick);
-        timer.cancel();
-      }
-    });
+    Timer.periodic(const Duration(seconds: 1), countdownTick);
   }
 
   @override
   void initState() {
     super.initState();
-    _visualTimerController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 1),
-    );
-    _cooldownTimer =
+    battleTickAnimator = AnimationController(vsync: this);
+    cooldownAnimator =
         AnimationController(vsync: this, duration: const Duration(seconds: 5))
-          ..addListener(() {
-            setState(() {});
-          })
+          ..addListener(() => setState(() {}))
           ..repeat();
-    startTimer();
+    startCountdown();
   }
 
   @override
   void dispose() {
-    _battleTimer.cancel();
-    _visualTimerController.dispose();
-    _cooldownTimer.dispose();
+    battleTimer.cancel();
+    battleTickAnimator.dispose();
+    cooldownAnimator.dispose();
     _disposeDangerIndicator();
     super.dispose();
   }
 
   BattleResult _battleResult() {
-    final won = _battle.enemy.health <= 0;
+    final won = battle.enemy.health <= 0;
     final correctAnswers = answers.where((correct) => correct).length;
     final totalAnswers = answers.length;
     return BattleResult(
@@ -305,17 +297,15 @@ class _BattlePageState extends State<_BattlePage>
   }
 
   void _pauseBattle() {
-    _battlePaused = true;
+    battlePaused = true;
     _disposeDangerIndicator();
   }
 
-  void _battleTick() async {
-    if (_battlePaused) {
-      return;
-    }
-    final gameOver = _battle.enemy.health <= 0 || _battle.player.health <= 0;
+  void battleTick() async {
+    if (battlePaused) return;
+    final gameOver = battle.enemy.health <= 0 || battle.player.health <= 0;
     if (!gameOver) {
-      setState(() => _battle.step());
+      setState(() => battle.step());
       _showDangerIndicator();
       return;
     }
@@ -331,6 +321,13 @@ class _BattlePageState extends State<_BattlePage>
     answers.add(result.correct);
   }
 
+  void _startCooldown() async {
+    cooldown = true;
+    cooldownAnimator.reset();
+    await cooldownAnimator.forward();
+    cooldown = false;
+  }
+
   void _addSoldier() async {
     Trivia randomTrivia() {
       return widget.trivia[Random().nextInt(widget.trivia.length)];
@@ -339,19 +336,17 @@ class _BattlePageState extends State<_BattlePage>
     _pauseBattle();
     final result =
         await showTriviaDialog(context: context, trivia: randomTrivia());
-    _battlePaused = false;
+    battlePaused = false;
 
     if (result is AnsweredQuestion) {
       _saveAnswer(result);
     }
 
-    Timer(Duration(seconds: 5), () => cooldown = false);
-                              _cooldownTimer.reset();
-                              _cooldownTimer.forward();
+    _startCooldown();
 
     switch (result) {
       case AnsweredQuestion(correct: true):
-        setState(() => _battle.addPlayerTroop());
+        setState(() => battle.addPlayerTroop());
         break;
       case AnsweredQuestion(correct: false):
       case TimeoutReached():
@@ -366,7 +361,7 @@ class _BattlePageState extends State<_BattlePage>
 
   void _showDangerIndicator() {
     _disposeDangerIndicator();
-    if (_battle.playerTroops.isNotEmpty || _battle.enemyTroops.isEmpty) {
+    if (battle.playerTroops.isNotEmpty || battle.enemyTroops.isEmpty) {
       return;
     }
     final overlay = Overlay.of(context);
@@ -402,12 +397,12 @@ class _BattlePageState extends State<_BattlePage>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     ...<Widget>[
-                      _Base.fromBase(_battle.enemy, type: UnitType.enemy),
+                      _Base.fromBase(battle.enemy, type: UnitType.enemy),
                       Padding(
                         padding: EdgeInsets.symmetric(
                             horizontal: 25.0, vertical: 16.0),
                         child: _TroopList(
-                          troops: _battle.enemyTroops,
+                          troops: battle.enemyTroops,
                           type: UnitType.enemy,
                         ),
                       ),
@@ -418,30 +413,28 @@ class _BattlePageState extends State<_BattlePage>
                         padding: EdgeInsets.symmetric(
                             horizontal: 25.0, vertical: 16.0),
                         child: _TroopList(
-                          troops: _battle.playerTroops,
+                          troops: battle.playerTroops,
                           type: UnitType.player,
                         ),
                       ),
-                      _Base.fromBase(_battle.player, type: UnitType.player),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (countdown > 0) {
-                            return;
-                          }
-                          {
-                            if (!cooldown) {
-                              _addSoldier();
-                              cooldown = true;
-                            }
-                          }
-                        },
-                        child:                           cooldown
-                              ? CircularProgressIndicator(
-                                  value: _cooldownTimer.value,
-                                )
-                              : Text("Add player soldier")
-                      ),
+                      _Base.fromBase(battle.player, type: UnitType.player),
                     ],
+                    SizedBox(height: 16.0),
+                    cooldown
+                        ? CircularProgressIndicator(
+                            value: cooldownAnimator.value)
+                        : FilledButton(
+                            onPressed: () {
+                              if (countdown > 0) return;
+                              if (cooldown) return;
+                              _addSoldier();
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.all(12.0),
+                              child: Text("[❔] Få soldat!",
+                                  style: TextStyle(fontSize: 16.0)),
+                            ),
+                          ),
                   ],
                 ),
               ),
@@ -450,7 +443,7 @@ class _BattlePageState extends State<_BattlePage>
                 child: Padding(
                   padding: EdgeInsets.all(16.0),
                   child: CircularProgressIndicator(
-                    value: _visualTimerController.value,
+                    value: battleTickAnimator.value,
                   ),
                 ),
               ),
@@ -462,8 +455,9 @@ class _BattlePageState extends State<_BattlePage>
                       "Kampen starter om $countdown...",
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                          fontSize: 48,
-                          color: ColorScheme.of(context).onPrimary),
+                        fontSize: 48,
+                        color: ColorScheme.of(context).onPrimary,
+                      ),
                     ),
                   ),
                 )
