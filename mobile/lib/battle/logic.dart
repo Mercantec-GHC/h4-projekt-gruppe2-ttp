@@ -82,15 +82,8 @@ class Battle {
     }
   }
 
-  bool _shouldAddEnemyTrops() {
-    final diceroll = _randomInt(min: 0, max: 100);
-    return diceroll < 10;
-  }
-
-  void _addEnemyTroop() {
-    if (_shouldAddEnemyTrops()) {
-      _enemyTroops.addLast(_randomTroop());
-    }
+  void addEnemyTroop() {
+    _enemyTroops.addLast(_randomTroop());
   }
 
   void _applyPlayerAttack() {
@@ -119,7 +112,6 @@ class Battle {
 
   void step() {
     _cullDeadTroops();
-    _addEnemyTroop();
     _applyPlayerAttack();
     _applyEnemyAttack();
   }

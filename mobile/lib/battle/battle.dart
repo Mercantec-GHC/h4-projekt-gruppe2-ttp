@@ -139,26 +139,19 @@ class _InactiveTroop extends StatelessWidget {
 }
 
 class _Base extends StatelessWidget {
-  const _Base({
-    required String name,
-    required int health,
-    required int maxHealth,
-    required UnitType type,
-  })  : _maxHealth = maxHealth,
-        _health = health,
-        _unitType = type,
-        _name = name;
-
-  _Base.fromBase(Base base, {required UnitType type})
+  _Base.fromBase(Base base,
+      {required UnitType type, required double visualEnemyTimer})
       : _maxHealth = base.maxHealth,
         _health = base.health,
         _unitType = type,
-        _name = base.name;
+        _name = base.name,
+        _visualEnemyTimer = visualEnemyTimer;
 
   final String _name;
   final int _health;
   final int _maxHealth;
   final UnitType _unitType;
+  final double _visualEnemyTimer;
 
   @override
   Widget build(BuildContext context) {
@@ -167,7 +160,26 @@ class _Base extends StatelessWidget {
             ? VerticalDirection.down
             : VerticalDirection.up,
         children: [
-          Text(_name, style: TextStyle(fontSize: 24.0)),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Center(
+                  child: Text(_name,
+                      style: TextStyle(
+                        fontSize: 24.0,
+                      ))),
+              if (_unitType == UnitType.enemy)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: CircularProgressIndicator(
+                      value: _visualEnemyTimer,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           SizedBox(height: 16.0),
           _Healthbar(health: _health, maxHealth: _maxHealth, height: 32),
         ]);
@@ -249,6 +261,8 @@ class _BattlePageState extends State<_BattlePage>
   final List<bool> answers = [];
   OverlayEntry? dangerOverlay;
   int countdown = 3;
+  late Timer _enemyTimer;
+  late AnimationController visualEnemyTimerController;
 
   void startCountdown() {
     void countdownTick(Timer timer) {
@@ -260,6 +274,7 @@ class _BattlePageState extends State<_BattlePage>
         ..addListener(() => setState(() {}))
         ..repeat(period: battleTickDuration);
       timer.cancel();
+      enemyTick();
     }
 
     Timer.periodic(const Duration(seconds: 1), countdownTick);
@@ -269,6 +284,7 @@ class _BattlePageState extends State<_BattlePage>
   void initState() {
     super.initState();
     battleTickAnimator = AnimationController(vsync: this);
+    visualEnemyTimerController = AnimationController(vsync: this);
     cooldownAnimator =
         AnimationController(vsync: this, duration: const Duration(seconds: 5))
           ..addListener(() => setState(() {}))
@@ -282,6 +298,8 @@ class _BattlePageState extends State<_BattlePage>
     battleTickAnimator.dispose();
     cooldownAnimator.dispose();
     _disposeDangerIndicator();
+    _enemyTimer.cancel();
+    visualEnemyTimerController.dispose();
     super.dispose();
   }
 
@@ -302,7 +320,11 @@ class _BattlePageState extends State<_BattlePage>
   }
 
   void battleTick() async {
-    if (battlePaused) return;
+    if (battlePaused) {
+      _enemyTimer.cancel();
+      return;
+    }
+
     final gameOver = battle.enemy.health <= 0 || battle.player.health <= 0;
     if (!gameOver) {
       setState(() => battle.step());
@@ -337,6 +359,7 @@ class _BattlePageState extends State<_BattlePage>
     final result =
         await showTriviaDialog(context: context, trivia: randomTrivia());
     battlePaused = false;
+    enemyTick();
 
     if (result is AnsweredQuestion) {
       _saveAnswer(result);
@@ -357,6 +380,17 @@ class _BattlePageState extends State<_BattlePage>
   void _disposeDangerIndicator() {
     dangerOverlay?.remove();
     dangerOverlay = null;
+  }
+
+  void enemyTick() {
+    visualEnemyTimerController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..repeat();
+    _enemyTimer = Timer.periodic(const Duration(seconds: 8), (timer) {
+      print(timer.tick);
+      battle.addEnemyTroop();
+    });
   }
 
   void _showDangerIndicator() {
@@ -397,7 +431,11 @@ class _BattlePageState extends State<_BattlePage>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     ...<Widget>[
-                      _Base.fromBase(battle.enemy, type: UnitType.enemy),
+                      _Base.fromBase(
+                        battle.enemy,
+                        type: UnitType.enemy,
+                        visualEnemyTimer: visualEnemyTimerController.value,
+                      ),
                       Padding(
                         padding: EdgeInsets.symmetric(
                             horizontal: 25.0, vertical: 16.0),
@@ -417,7 +455,8 @@ class _BattlePageState extends State<_BattlePage>
                           type: UnitType.player,
                         ),
                       ),
-                      _Base.fromBase(battle.player, type: UnitType.player),
+                      _Base.fromBase(battle.player,
+                          type: UnitType.player, visualEnemyTimer: 0),
                     ],
                     SizedBox(height: 16.0),
                     cooldown
