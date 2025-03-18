@@ -346,6 +346,8 @@ class _BattlePageState extends State<_BattlePage>
     }
 
     Timer(Duration(seconds: 5), () => cooldown = false);
+                              _cooldownTimer.reset();
+                              _cooldownTimer.forward();
 
     switch (result) {
       case AnsweredQuestion(correct: true):
@@ -432,13 +434,12 @@ class _BattlePageState extends State<_BattlePage>
                               cooldown = true;
                             }
                           }
-                          cooldown
+                        },
+                        child:                           cooldown
                               ? CircularProgressIndicator(
                                   value: _cooldownTimer.value,
                                 )
-                              : Text("Add player soldier");
-                        },
-                        child: null,
+                              : Text("Add player soldier")
                       ),
                     ],
                   ],

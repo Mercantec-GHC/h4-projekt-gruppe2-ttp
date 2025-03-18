@@ -79,7 +79,7 @@ fn generate_trivia_math() -> Trivia {
         Answer::new(true, result.to_string()),
         Answer::new(false, (result + random_offset).to_string()),
         Answer::new(false, (result - random_offset).to_string()),
-        Answer::new(false, (result - 1.0).to_string()),
+        Answer::new(false, (result - random_offset / 2.0).to_string()),
     ];
 
     for _ in 0..100 {
