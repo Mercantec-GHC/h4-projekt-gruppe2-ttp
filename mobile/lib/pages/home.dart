@@ -222,6 +222,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _index.index,
           onTap: (index) {
             switch (index) {
               case 0:
