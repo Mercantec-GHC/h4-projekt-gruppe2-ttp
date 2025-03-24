@@ -388,7 +388,6 @@ class _BattlePageState extends State<_BattlePage>
       duration: const Duration(seconds: 8),
     )..repeat();
     _enemyTimer = Timer.periodic(const Duration(seconds: 8), (timer) {
-      print(timer.tick);
       battle.addEnemyTroop();
     });
   }
